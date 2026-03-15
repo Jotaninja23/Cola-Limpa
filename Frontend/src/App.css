@@ -1,0 +1,49 @@
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+}
+
+body{
+  font-family: 'Inter', sans-serif;
+  background-color:#f5f5f5;
+  color:#333;
+}
+
+header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:20px 40px;
+  background:linear-gradient(90deg,#700078,#7c3aed);
+  color: #f5f5f5;
+}
+
+header h1{
+  font-size:24px;
+}
+
+nav a{
+  margin-left:20px;
+  text-decoration:none;
+  color:white;
+  font-weight:500;
+}
+
+.hero {
+  text-align: center;
+}
+
+.timer {
+  text-align: center;
+}
+
+footer { 
+  text-align: center;
+  margin-top: 40px;
+}
+
+.meu-botao:hover {
+  background: #700078;
+  transform: scale(1.05);
+}
