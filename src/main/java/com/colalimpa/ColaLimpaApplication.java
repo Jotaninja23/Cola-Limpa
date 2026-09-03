@@ -9,5 +9,4 @@ public class ColaLimpaApplication {
 	public static void main(String[] args) {
 		SpringApplication.run(ColaLimpaApplication.class, args);
 	}
-
 }
