@@ -11,8 +11,6 @@ const DAYS = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'];
 const WEEKLY_MINUTES = [45, 60, 30, 90, 75, 50, 0];
 
 export default function Dashboard({ totalXP, sessionsCompleted, totalMinutesToday, streak }: DashboardProps) {
-  const maxMinutes = Math.max(...WEEKLY_MINUTES, 1);
-
   const todayIndex = new Date().getDay();
   // Convert JS day (0=Sun) to our array (0=Mon)
   const todayIdx = todayIndex === 0 ? 6 : todayIndex - 1;
