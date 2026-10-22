@@ -147,7 +147,8 @@ Cola-Limpa/
 │   │   └── resources/
 │   │       └── application.properties   # Parâmetros de infraestrutura e persistência
 │   └── test/                            # Bateria de testes automatizados
-├── DockerFile                           # Especificação de contêiner de produção
+├── Dockerfile                           # Especificação de contêiner do backend
+├── docker-compose.yml                   # Orquestração dos serviços (PostgreSQL, Backend, Frontend)
 ├── pom.xml                              # Manifesto de dependências do Maven
 └── README.md                            # Guia mestre do repositório
 ```
@@ -220,6 +221,32 @@ Rotinas auxiliares disponíveis:
 npm run build    # Compilação TypeScript e empacotamento para distribuição
 npm run lint     # Análise estática com Oxlint
 npm run preview  # Execução local do pacote compilado de produção
+```
+
+---
+
+### 5.5. Execução Completa via Docker Compose
+
+Para subir toda a infraestrutura (Banco PostgreSQL, Backend Spring Boot e Frontend React) de forma orquestrada e automatizada:
+
+```bash
+# Inicialização de todos os serviços em segundo plano
+docker compose up -d --build
+```
+
+Endpoints disponíveis após a inicialização:
+- **Frontend:** `http://localhost:5173`
+- **Backend API:** `http://localhost:8080`
+- **PostgreSQL:** `localhost:5432`
+
+> **Nota:** Caso você já possua uma instância local do PostgreSQL em execução na porta `5432` da máquina hospedeira, defina uma porta alternativa para o banco no arquivo `.env` ou via comando:
+> ```bash
+> POSTGRES_PORT=5433 docker compose up -d --build
+> ```
+
+Para interromper os serviços:
+```bash
+docker compose down
 ```
 
 ---

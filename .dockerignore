@@ -1,0 +1,12 @@
+target/
+.git/
+.gitignore
+.idea/
+.vscode/
+frontend/
+docs/
+agent_harness/
+AGENTS.md
+README.md
+*.md
+
