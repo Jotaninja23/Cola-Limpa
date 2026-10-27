@@ -1,18 +1,6 @@
 import { useState } from 'react';
-import { Heart, MessageCircle, Share2, Bookmark } from 'lucide-react';
-
-interface Post {
-  id: number;
-  author: string;
-  avatar: string;
-  time: string;
-  tag: string;
-  title: string;
-  content: string;
-  likes: number;
-  comments: number;
-  liked: boolean;
-}
+import type { Comment } from '../types/comment';
+import PostCard, { type Post } from './PostCard';
 
 const MOCK_POSTS: Post[] = [
   {
@@ -24,7 +12,7 @@ const MOCK_POSTS: Post[] = [
     title: 'Dica para resolver equações do 2º grau mais rápido!',
     content: 'Pessoal, descobri uma forma muito mais rápida de usar a fórmula de Bhaskara. Ao invés de decorar, pensem no discriminante como o "detector" de raízes...',
     likes: 24,
-    comments: 8,
+    comments: 2,
     liked: false,
   },
   {
@@ -36,7 +24,7 @@ const MOCK_POSTS: Post[] = [
     title: 'Resumo: Figuras de linguagem para a prova',
     content: 'Fiz um mapa mental de todas as figuras de linguagem que caem com frequência. Metáfora, metonímia, catacrese, prosopopeia... Compartilhando com vocês!',
     likes: 42,
-    comments: 15,
+    comments: 1,
     liked: true,
   },
   {
@@ -48,7 +36,7 @@ const MOCK_POSTS: Post[] = [
     title: 'Tabela periódica: como decorar os elementos?',
     content: 'Alguém tem dicas pra decorar a tabela periódica? Estou tentando usar músicas mas não acho nenhuma boa. Aceito sugestões!',
     likes: 18,
-    comments: 22,
+    comments: 0,
     liked: false,
   },
   {
@@ -60,10 +48,53 @@ const MOCK_POSTS: Post[] = [
     title: 'Linha do tempo: Era Vargas simplificada',
     content: 'Montei uma linha do tempo super enxuta da Era Vargas, desde o governo provisório até o Estado Novo. Facilita muito na hora de organizar os eventos...',
     likes: 31,
-    comments: 6,
+    comments: 0,
     liked: false,
   },
 ];
+
+const SAMPLE_COMMENTS: Record<number, Comment[]> = {
+  1: [
+    {
+      id: 101,
+      postId: 1,
+      authorId: 2,
+      authorName: 'Pedro Henrique',
+      authorAvatar: 'PH',
+      content: 'Essa abordagem do discriminante como detector faz todo o sentido, obrigado!',
+      likes: 6,
+      liked: false,
+      reports: 0,
+      createdAt: 'Há 12 min',
+    },
+    {
+      id: 102,
+      postId: 1,
+      authorId: 3,
+      authorName: 'Juliana Santos',
+      authorAvatar: 'JS',
+      content: 'Se o delta for negativo já nem precisa continuar calculando!',
+      likes: 4,
+      liked: true,
+      reports: 0,
+      createdAt: 'Há 8 min',
+    },
+  ],
+  2: [
+    {
+      id: 201,
+      postId: 2,
+      authorId: 1,
+      authorName: 'Ana Clara',
+      authorAvatar: 'AC',
+      content: 'Metonímia sempre cai nas provas, excelente síntese.',
+      likes: 5,
+      liked: false,
+      reports: 0,
+      createdAt: 'Há 45 min',
+    },
+  ],
+};
 
 const CATEGORIES = ['Todos', 'Matemática', 'Português', 'Química', 'História', 'Física', 'Biologia'];
 
@@ -87,7 +118,6 @@ export default function CommunityFeed() {
 
   return (
     <div className="feed-wrapper">
-      {/* Category Filter */}
       <div className="feed-categories">
         {CATEGORIES.map(cat => (
           <button
@@ -101,46 +131,14 @@ export default function CommunityFeed() {
         ))}
       </div>
 
-      {/* Posts */}
       {filteredPosts.map((post, i) => (
-        <article
+        <PostCard
           key={post.id}
-          className="post-card"
-          style={{ animationDelay: `${i * 80}ms` }}
-        >
-          <div className="post-card-header">
-            <div className="post-avatar">{post.avatar}</div>
-            <div className="post-author-info">
-              <div className="post-author-name">{post.author}</div>
-              <div className="post-time">{post.time}</div>
-            </div>
-            <span className="post-tag">{post.tag}</span>
-          </div>
-          <div className="post-card-body">
-            <h3>{post.title}</h3>
-            <p>{post.content}</p>
-          </div>
-          <div className="post-card-footer">
-            <button
-              id={`like-btn-${post.id}`}
-              className={`post-action-btn ${post.liked ? 'liked' : ''}`}
-              onClick={() => toggleLike(post.id)}
-            >
-              <Heart size={18} />
-              <span>{post.likes}</span>
-            </button>
-            <button className="post-action-btn">
-              <MessageCircle size={18} />
-              <span>{post.comments}</span>
-            </button>
-            <button className="post-action-btn">
-              <Share2 size={18} />
-            </button>
-            <button className="post-action-btn" style={{ marginLeft: 'auto' }}>
-              <Bookmark size={18} />
-            </button>
-          </div>
-        </article>
+          post={post}
+          index={i}
+          initialComments={SAMPLE_COMMENTS[post.id] ?? []}
+          onToggleLike={toggleLike}
+        />
       ))}
     </div>
   );
