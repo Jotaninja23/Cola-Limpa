@@ -64,6 +64,17 @@ class ComentarioControllerTest {
     }
 
     @Test
+    void shouldReturnBadRequestWhenCreatingCommentWithExcessiveText() throws Exception {
+        String textoLongo = "a".repeat(1001);
+        ComentarioRequest request = new ComentarioRequest(10L, 1L, textoLongo);
+
+        mockMvc.perform(post("/api/comentarios")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
     void shouldReturnCommentsListByPost() throws Exception {
         ComentarioResponse response = new ComentarioResponse(
                 50L, 10L, 1L, "Aluno", null, "Ótimo post!", 0, 0, LocalDateTime.now()
