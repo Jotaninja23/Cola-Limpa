@@ -16,3 +16,4 @@ export interface NewCommentPayload {
   authorId: number;
   content: string;
 }
+

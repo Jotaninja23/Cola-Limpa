@@ -58,3 +58,4 @@ describe('CommentForm', () => {
     expect(screen.getByRole('button', { name: /publicar comentário/i })).toBeDisabled();
   });
 });
+

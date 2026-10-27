@@ -104,3 +104,4 @@ describe('CommentSection', () => {
     expect(handleLike).toHaveBeenCalledWith(1);
   });
 });
+

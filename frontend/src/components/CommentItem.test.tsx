@@ -103,3 +103,4 @@ describe('CommentItem', () => {
     expect(screen.queryByRole('button', { name: /excluir comentário/i })).not.toBeInTheDocument();
   });
 });
+
