@@ -11,6 +11,7 @@ import com.colalimpa.exception.BusinessRuleException;
 import com.colalimpa.model.CronometroHistorico;
 import com.colalimpa.model.Usuario;
 import com.colalimpa.repository.CronometroHistoricoRepository;
+import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -56,6 +57,40 @@ class CronometroServiceTest {
     }
 
     @Test
+    void shouldRegisterPauseSessionAndGrantBonusXp() {
+        CronometroHistoricoRequest request = new CronometroHistoricoRequest(1L, 300, "PAUSA");
+        CronometroHistorico historico = new CronometroHistorico(usuario, 300, "PAUSA");
+        historico.setId(6L);
+
+        when(usuarioService.buscarEntidadePorId(1L)).thenReturn(usuario);
+        when(cronometroHistoricoRepository.save(any(CronometroHistorico.class))).thenReturn(historico);
+
+        CronometroHistoricoResponse response = cronometroService.registrarSessao(request);
+
+        assertThat(response).isNotNull();
+        assertThat(response.id()).isEqualTo(6L);
+        assertThat(response.xpGanho()).isEqualTo(11);
+        assertThat(usuario.getXp()).isEqualTo(11);
+    }
+
+    @Test
+    void shouldRegisterFreeStudySessionWithProportionalXp() {
+        CronometroHistoricoRequest request = new CronometroHistoricoRequest(1L, 540, "LIVRE");
+        CronometroHistorico historico = new CronometroHistorico(usuario, 540, "LIVRE");
+        historico.setId(7L);
+
+        when(usuarioService.buscarEntidadePorId(1L)).thenReturn(usuario);
+        when(cronometroHistoricoRepository.save(any(CronometroHistorico.class))).thenReturn(historico);
+
+        CronometroHistoricoResponse response = cronometroService.registrarSessao(request);
+
+        assertThat(response).isNotNull();
+        assertThat(response.id()).isEqualTo(7L);
+        assertThat(response.xpGanho()).isEqualTo(3);
+        assertThat(usuario.getXp()).isEqualTo(3);
+    }
+
+    @Test
     void shouldThrowExceptionWhenStudyTimeExceeds16Hours() {
         CronometroHistoricoRequest request = new CronometroHistoricoRequest(1L, 57601, "LIVRE");
 
@@ -63,5 +98,19 @@ class CronometroServiceTest {
                 .isInstanceOf(BusinessRuleException.class)
                 .hasMessageContaining("O tempo contínuo de estudo excede o limite biológico seguro de 16 horas.");
     }
-}
 
+    @Test
+    void shouldListStudyHistoryByUserId() {
+        CronometroHistorico historico = new CronometroHistorico(usuario, 1500, "POMODORO");
+        historico.setId(5L);
+
+        when(usuarioService.buscarEntidadePorId(1L)).thenReturn(usuario);
+        when(cronometroHistoricoRepository.findByUsuarioIdOrderByDataCriacaoDesc(1L)).thenReturn(List.of(historico));
+
+        List<CronometroHistoricoResponse> list = cronometroService.listarHistoricoPorUsuario(1L);
+
+        assertThat(list).hasSize(1);
+        assertThat(list.get(0).id()).isEqualTo(5L);
+        assertThat(list.get(0).tempoSegundos()).isEqualTo(1500);
+    }
+}

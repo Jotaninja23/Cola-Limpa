@@ -12,6 +12,7 @@ import com.colalimpa.exception.BusinessRuleException;
 import com.colalimpa.exception.ResourceNotFoundException;
 import com.colalimpa.model.Usuario;
 import com.colalimpa.repository.UsuarioRepository;
+import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -73,12 +74,82 @@ class UsuarioServiceTest {
     }
 
     @Test
+    void shouldThrowExceptionWhenPhoneAlreadyExists() {
+        UsuarioRequest request = new UsuarioRequest("Aluno Teste", null, "11999999999", null, 60);
+
+        when(usuarioRepository.existsByTelefone("11999999999")).thenReturn(true);
+
+        assertThatThrownBy(() -> usuarioService.cadastrar(request))
+                .isInstanceOf(BusinessRuleException.class)
+                .hasMessageContaining("O telefone informado já está em uso.");
+    }
+
+    @Test
+    void shouldReturnUserResponseWhenFoundById() {
+        when(usuarioRepository.findById(1L)).thenReturn(Optional.of(usuario));
+
+        UsuarioResponse response = usuarioService.buscarPorId(1L);
+
+        assertThat(response).isNotNull();
+        assertThat(response.id()).isEqualTo(1L);
+        assertThat(response.nome()).isEqualTo("Aluno Teste");
+    }
+
+    @Test
     void shouldThrowExceptionWhenUserNotFoundById() {
         when(usuarioRepository.findById(99L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> usuarioService.buscarPorId(99L))
                 .isInstanceOf(ResourceNotFoundException.class)
                 .hasMessageContaining("Usuário não encontrado com id: 99");
+    }
+
+    @Test
+    void shouldListAllUsers() {
+        when(usuarioRepository.findAll()).thenReturn(List.of(usuario));
+
+        List<UsuarioResponse> list = usuarioService.listarTodos();
+
+        assertThat(list).hasSize(1);
+        assertThat(list.get(0).nome()).isEqualTo("Aluno Teste");
+    }
+
+    @Test
+    void shouldUpdateUserProfileSuccessfully() {
+        UsuarioRequest request = new UsuarioRequest("Novo Nome", "aluno@email.com", "11999999999", "http://foto.png", 90);
+
+        when(usuarioRepository.findById(1L)).thenReturn(Optional.of(usuario));
+        when(usuarioRepository.save(any(Usuario.class))).thenReturn(usuario);
+
+        UsuarioResponse response = usuarioService.atualizarPerfil(1L, request);
+
+        assertThat(response).isNotNull();
+        assertThat(usuario.getNome()).isEqualTo("Novo Nome");
+        assertThat(usuario.getMetaDiariaMinutos()).isEqualTo(90);
+    }
+
+    @Test
+    void shouldThrowExceptionWhenUpdatingToAlreadyTakenEmail() {
+        UsuarioRequest request = new UsuarioRequest("Novo Nome", "outro@email.com", null, null, 60);
+
+        when(usuarioRepository.findById(1L)).thenReturn(Optional.of(usuario));
+        when(usuarioRepository.existsByEmail("outro@email.com")).thenReturn(true);
+
+        assertThatThrownBy(() -> usuarioService.atualizarPerfil(1L, request))
+                .isInstanceOf(BusinessRuleException.class)
+                .hasMessageContaining("O e-mail informado já está em uso.");
+    }
+
+    @Test
+    void shouldThrowExceptionWhenUpdatingToAlreadyTakenPhone() {
+        UsuarioRequest request = new UsuarioRequest("Novo Nome", null, "11888888888", null, 60);
+
+        when(usuarioRepository.findById(1L)).thenReturn(Optional.of(usuario));
+        when(usuarioRepository.existsByTelefone("11888888888")).thenReturn(true);
+
+        assertThatThrownBy(() -> usuarioService.atualizarPerfil(1L, request))
+                .isInstanceOf(BusinessRuleException.class)
+                .hasMessageContaining("O telefone informado já está em uso.");
     }
 
     @Test
@@ -90,5 +161,13 @@ class UsuarioServiceTest {
         assertThat(usuario.getXp()).isEqualTo(50);
         verify(usuarioRepository).save(usuario);
     }
-}
 
+    @Test
+    void shouldDeleteUserSuccessfully() {
+        when(usuarioRepository.findById(1L)).thenReturn(Optional.of(usuario));
+
+        usuarioService.excluir(1L);
+
+        verify(usuarioRepository).delete(usuario);
+    }
+}

@@ -10,6 +10,7 @@ import com.colalimpa.dto.SolicitarCodigoRequest;
 import com.colalimpa.dto.TokenResponse;
 import com.colalimpa.dto.ValidarCodigoRequest;
 import com.colalimpa.exception.BusinessRuleException;
+import com.colalimpa.exception.ResourceNotFoundException;
 import com.colalimpa.model.CodigoAutenticacao;
 import com.colalimpa.model.Usuario;
 import com.colalimpa.repository.CodigoAutenticacaoRepository;
@@ -53,6 +54,23 @@ class AuthServiceTest {
 
         authService.solicitarCodigo(request);
 
+        verify(codigoRepository).save(any(CodigoAutenticacao.class));
+    }
+
+    @Test
+    void shouldCreateNewUserWhenEmailNotFoundDuringOtpRequest() {
+        SolicitarCodigoRequest request = new SolicitarCodigoRequest("novato@email.com");
+        Usuario novoUsuario = new Usuario("novato", "novato@email.com", null, null, null);
+        novoUsuario.setId(2L);
+
+        when(usuarioRepository.findByEmail("novato@email.com")).thenReturn(Optional.empty());
+        when(usuarioRepository.save(any(Usuario.class))).thenReturn(novoUsuario);
+        when(codigoRepository.countByUsuarioIdAndDataCriacaoAfter(any(), any())).thenReturn(0L);
+        when(codigoRepository.findTopByUsuarioIdOrderByDataCriacaoDesc(2L)).thenReturn(Optional.empty());
+
+        authService.solicitarCodigo(request);
+
+        verify(usuarioRepository).save(any(Usuario.class));
         verify(codigoRepository).save(any(CodigoAutenticacao.class));
     }
 
@@ -101,6 +119,29 @@ class AuthServiceTest {
     }
 
     @Test
+    void shouldThrowExceptionWhenUserNotFoundDuringValidation() {
+        ValidarCodigoRequest request = new ValidarCodigoRequest("naoexiste@email.com", "123456");
+
+        when(usuarioRepository.findByEmail("naoexiste@email.com")).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> authService.validarCodigo(request))
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessageContaining("Usuário não encontrado para o e-mail informado.");
+    }
+
+    @Test
+    void shouldThrowExceptionWhenNoActiveOtpExists() {
+        ValidarCodigoRequest request = new ValidarCodigoRequest("estudante@email.com", "123456");
+
+        when(usuarioRepository.findByEmail("estudante@email.com")).thenReturn(Optional.of(usuario));
+        when(codigoRepository.findTopByUsuarioIdOrderByDataCriacaoDesc(1L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> authService.validarCodigo(request))
+                .isInstanceOf(BusinessRuleException.class)
+                .hasMessageContaining("Nenhum código ativo encontrado para este e-mail.");
+    }
+
+    @Test
     void shouldThrowExceptionWhenOtpIsExpired() {
         ValidarCodigoRequest request = new ValidarCodigoRequest("estudante@email.com", "123456");
 
@@ -113,5 +154,21 @@ class AuthServiceTest {
                 .isInstanceOf(BusinessRuleException.class)
                 .hasMessageContaining("O código informado expirou.");
     }
-}
 
+    @Test
+    void shouldThrowExceptionAndIncrementAttemptsWhenOtpIsIncorrect() {
+        ValidarCodigoRequest request = new ValidarCodigoRequest("estudante@email.com", "999999");
+
+        CodigoAutenticacao codigoAtivo = new CodigoAutenticacao(usuario, "123456", "EMAIL", LocalDateTime.now().plusMinutes(5));
+
+        when(usuarioRepository.findByEmail("estudante@email.com")).thenReturn(Optional.of(usuario));
+        when(codigoRepository.findTopByUsuarioIdOrderByDataCriacaoDesc(1L)).thenReturn(Optional.of(codigoAtivo));
+
+        assertThatThrownBy(() -> authService.validarCodigo(request))
+                .isInstanceOf(BusinessRuleException.class)
+                .hasMessageContaining("Código de autenticação inválido.");
+
+        assertThat(codigoAtivo.getTentativasEnvio()).isEqualTo(1);
+        verify(codigoRepository).save(codigoAtivo);
+    }
+}

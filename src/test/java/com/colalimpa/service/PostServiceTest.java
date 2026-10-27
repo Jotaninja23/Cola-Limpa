@@ -1,12 +1,14 @@
 package com.colalimpa.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.colalimpa.dto.PostRequest;
 import com.colalimpa.dto.PostResponse;
+import com.colalimpa.exception.ResourceNotFoundException;
 import com.colalimpa.model.Post;
 import com.colalimpa.model.Usuario;
 import com.colalimpa.repository.PostRepository;
@@ -58,6 +60,26 @@ class PostServiceTest {
     }
 
     @Test
+    void shouldReturnPostResponseWhenFoundById() {
+        when(postRepository.findById(10L)).thenReturn(Optional.of(post));
+
+        PostResponse response = postService.buscarPorId(10L);
+
+        assertThat(response).isNotNull();
+        assertThat(response.id()).isEqualTo(10L);
+        assertThat(response.titulo()).isEqualTo("Dúvida de Álgebra");
+    }
+
+    @Test
+    void shouldThrowExceptionWhenPostNotFoundById() {
+        when(postRepository.findById(999L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> postService.buscarPorId(999L))
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessageContaining("Post não encontrado com id: 999");
+    }
+
+    @Test
     void shouldReturnPublicFeedExcludingHighReportedPosts() {
         when(postRepository.findByQtDenunciasLessThanOrderByDataCriacaoDesc(5)).thenReturn(List.of(post));
 
@@ -65,6 +87,36 @@ class PostServiceTest {
 
         assertThat(feed).hasSize(1);
         assertThat(feed.get(0).titulo()).isEqualTo("Dúvida de Álgebra");
+    }
+
+    @Test
+    void shouldListPostsByMateria() {
+        when(postRepository.findByMateria("Matemática")).thenReturn(List.of(post));
+
+        List<PostResponse> posts = postService.listarPorMateria("Matemática");
+
+        assertThat(posts).hasSize(1);
+        assertThat(posts.get(0).materia()).isEqualTo("Matemática");
+    }
+
+    @Test
+    void shouldListPostsByCategoria() {
+        when(postRepository.findByCategoria("Dúvida")).thenReturn(List.of(post));
+
+        List<PostResponse> posts = postService.listarPorCategoria("Dúvida");
+
+        assertThat(posts).hasSize(1);
+        assertThat(posts.get(0).categoria()).isEqualTo("Dúvida");
+    }
+
+    @Test
+    void shouldListPostsByUsuario() {
+        when(postRepository.findByUsuarioIdOrderByDataCriacaoDesc(1L)).thenReturn(List.of(post));
+
+        List<PostResponse> posts = postService.listarPorUsuario(1L);
+
+        assertThat(posts).hasSize(1);
+        assertThat(posts.get(0).usuarioId()).isEqualTo(1L);
     }
 
     @Test
@@ -76,5 +128,13 @@ class PostServiceTest {
         assertThat(post.getQtDenuncias()).isEqualTo(1);
         verify(postRepository).save(post);
     }
-}
 
+    @Test
+    void shouldDeletePostSuccessfully() {
+        when(postRepository.findById(10L)).thenReturn(Optional.of(post));
+
+        postService.remover(10L);
+
+        verify(postRepository).delete(post);
+    }
+}
