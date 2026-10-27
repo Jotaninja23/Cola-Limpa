@@ -34,16 +34,48 @@ describe('CommunityFeed', () => {
   it('should toggle like status and update counter on post click', () => {
     render(<CommunityFeed />);
 
-    const likeBtn = screen.getByRole('button', { name: /24/i });
+    const likeBtn = screen.getByRole('button', { name: /curtir publicação \(24 curtidas\)/i });
     expect(likeBtn).not.toHaveClass('liked');
 
     fireEvent.click(likeBtn);
 
-    expect(screen.getByText('25')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /25/i })).toHaveClass('liked');
+    expect(screen.getByRole('button', { name: /descurtir publicação \(25 curtidas\)/i })).toHaveClass('liked');
 
-    fireEvent.click(screen.getByRole('button', { name: /25/i }));
+    fireEvent.click(screen.getByRole('button', { name: /descurtir publicação \(25 curtidas\)/i }));
 
-    expect(screen.getByText('24')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /curtir publicação \(24 curtidas\)/i })).not.toHaveClass('liked');
+  });
+
+  it('should toggle comments section when clicking comment button', () => {
+    render(<CommunityFeed />);
+
+    const commentBtn = screen.getByRole('button', { name: /comentários \(2\)/i });
+    expect(commentBtn).toHaveAttribute('aria-expanded', 'false');
+    expect(screen.queryByText('Comentários (2)')).not.toBeInTheDocument();
+
+    fireEvent.click(commentBtn);
+
+    expect(commentBtn).toHaveAttribute('aria-expanded', 'true');
+    expect(screen.getByText('Comentários (2)')).toBeInTheDocument();
+    expect(screen.getByText(/essa abordagem do discriminante como detector/i)).toBeInTheDocument();
+
+    fireEvent.click(commentBtn);
+    expect(screen.queryByText('Comentários (2)')).not.toBeInTheDocument();
+  });
+
+  it('should allow submitting a new comment and dynamically update comment count', () => {
+    render(<CommunityFeed />);
+
+    const commentBtn = screen.getByRole('button', { name: /comentários \(2\)/i });
+    fireEvent.click(commentBtn);
+
+    const textarea = screen.getByPlaceholderText(/adicione um comentário construtivo/i);
+    fireEvent.change(textarea, { target: { value: 'Comentário interativo novinho' } });
+
+    const submitBtn = screen.getByRole('button', { name: /publicar comentário/i });
+    fireEvent.click(submitBtn);
+
+    expect(screen.getByText('Comentário interativo novinho')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /comentários \(3\)/i })).toBeInTheDocument();
   });
 });
