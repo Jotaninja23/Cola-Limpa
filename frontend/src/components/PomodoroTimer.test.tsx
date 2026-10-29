@@ -21,7 +21,7 @@ describe('PomodoroTimer', () => {
     render(<PomodoroTimer {...defaultProps} />);
 
     expect(screen.getByText('25:00')).toBeInTheDocument();
-    expect(screen.getByText('Foco')).toBeInTheDocument();
+    expect(screen.getAllByText('Foco')[0]).toBeInTheDocument();
   });
 
   it('should trigger onToggle when main button is clicked', () => {
@@ -55,7 +55,7 @@ describe('PomodoroTimer', () => {
     const handleSetMode = vi.fn();
     render(<PomodoroTimer {...defaultProps} onSetMode={handleSetMode} />);
 
-    const breakTab = screen.getByText('☕ Pausa');
+    const breakTab = screen.getByRole('button', { name: /pausa/i });
     fireEvent.click(breakTab);
 
     expect(handleSetMode).toHaveBeenCalledWith('shortBreak');

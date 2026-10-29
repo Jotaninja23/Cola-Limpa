@@ -36,7 +36,7 @@ describe('Dashboard', () => {
       />
     );
 
-    expect(screen.getByText('📈 Tempo de Estudo Semanal')).toBeInTheDocument();
+    expect(screen.getByText('Tempo de Estudo Semanal')).toBeInTheDocument();
     expect(screen.getByText('Seg')).toBeInTheDocument();
     expect(screen.getByText('Ter')).toBeInTheDocument();
     expect(screen.getByText('Qua')).toBeInTheDocument();

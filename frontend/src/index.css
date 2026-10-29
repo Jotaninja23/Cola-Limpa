@@ -7,29 +7,27 @@
 
 /* --- Design Tokens --- */
 :root {
-  /* Cores Primárias */
-  --bg-primary: #F9F6F0;
-  --bg-secondary: #F0EBE1;
+  --bg-primary: #F8F4EC;
+  --bg-secondary: #EFE6D8;
   --bg-card: #FFFFFF;
-  --color-primary: #4A3022;
-  --color-secondary: #C57B57;
-  --color-accent: #D4943A;
-  --color-accent-light: #F5D590;
-  --color-text: #3B2A1E;
-  --color-text-muted: #8B7355;
-  --color-text-light: #B09E88;
-  --color-border: #E6DFD3;
-  --color-success: #5A9A6B;
-  --color-danger: #C45B4A;
-  --color-focus: #6BA3D6;
-  --color-pause: #6BA3D6;
+  --color-primary: #362317;
+  --color-secondary: #9C5228;
+  --color-accent: #C57D1E;
+  --color-accent-light: #F7E5C8;
+  --color-text: #2E221B;
+  --color-text-muted: #735F50;
+  --color-text-light: #A49182;
+  --color-border: #E2D7C8;
+  --color-success: #4E875C;
+  --color-danger: #BD4B39;
+  --color-focus: #C57D1E;
+  --color-pause: #7E97A6;
 
-  /* Sombras com tom marrom */
-  --shadow-sm: 0 1px 3px rgba(74, 48, 34, 0.06);
-  --shadow-md: 0 4px 12px rgba(74, 48, 34, 0.08);
-  --shadow-lg: 0 8px 30px rgba(74, 48, 34, 0.12);
-  --shadow-xl: 0 12px 40px rgba(74, 48, 34, 0.16);
-  --shadow-glow: 0 0 20px rgba(197, 123, 87, 0.25);
+  --shadow-sm: 0 1px 3px rgba(54, 35, 23, 0.06);
+  --shadow-md: 0 4px 14px rgba(54, 35, 23, 0.08);
+  --shadow-lg: 0 10px 30px rgba(54, 35, 23, 0.12);
+  --shadow-xl: 0 16px 44px rgba(54, 35, 23, 0.16);
+  --shadow-glow: 0 0 24px rgba(197, 125, 30, 0.28);
 
   /* Tipografia */
   --font-family: 'Nunito', system-ui, -apple-system, sans-serif;

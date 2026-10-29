@@ -1,4 +1,4 @@
-import { Clock, Flame, Trophy, Target } from 'lucide-react';
+import { Clock, Flame, Trophy, Target, TrendingUp } from 'lucide-react';
 
 interface DashboardProps {
   totalXP: number;
@@ -12,7 +12,6 @@ const WEEKLY_MINUTES = [45, 60, 30, 90, 75, 50, 0];
 
 export default function Dashboard({ totalXP, sessionsCompleted, totalMinutesToday, streak }: DashboardProps) {
   const todayIndex = new Date().getDay();
-  // Convert JS day (0=Sun) to our array (0=Mon)
   const todayIdx = todayIndex === 0 ? 6 : todayIndex - 1;
 
   const weeklyWithToday = WEEKLY_MINUTES.map((v, i) => (i === todayIdx ? totalMinutesToday || v : v));
@@ -20,7 +19,6 @@ export default function Dashboard({ totalXP, sessionsCompleted, totalMinutesToda
 
   return (
     <div className="dashboard-wrapper">
-      {/* Stat Cards */}
       <div className="dashboard-grid">
         <div className="dash-card" style={{ animationDelay: '0ms' }}>
           <div className="dash-card-icon gold">
@@ -55,9 +53,11 @@ export default function Dashboard({ totalXP, sessionsCompleted, totalMinutesToda
         </div>
       </div>
 
-      {/* Weekly Chart */}
       <div className="weekly-chart-card" style={{ animationDelay: '320ms' }}>
-        <h3>📈 Tempo de Estudo Semanal</h3>
+        <div className="weekly-chart-title">
+          <TrendingUp size={20} />
+          <h3>Tempo de Estudo Semanal</h3>
+        </div>
         <div className="weekly-chart">
           {weeklyWithToday.map((val, i) => (
             <div key={i} className="weekly-bar-wrapper">
