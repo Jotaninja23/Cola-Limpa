@@ -2,6 +2,9 @@ package com.colalimpa.controller;
 
 import com.colalimpa.dto.PostRequest;
 import com.colalimpa.dto.PostResponse;
+import com.colalimpa.exception.BusinessRuleException;
+import com.colalimpa.security.CurrentUser;
+import com.colalimpa.security.UsuarioPrincipal;
 import com.colalimpa.service.PostService;
 import jakarta.validation.Valid;
 import java.net.URI;
@@ -27,8 +30,18 @@ public class PostController {
     }
 
     @PostMapping
-    public ResponseEntity<PostResponse> criar(@Valid @RequestBody PostRequest request) {
-        PostResponse response = postService.criar(request);
+    public ResponseEntity<PostResponse> criar(
+            @CurrentUser UsuarioPrincipal principal,
+            @Valid @RequestBody PostRequest request
+    ) {
+        Long usuarioId = principal != null ? principal.getId() : request.usuarioId();
+        if (usuarioId == null) {
+            throw new BusinessRuleException("Identificador do usuário autor não informado.");
+        }
+        PostRequest finalRequest = (principal != null && !principal.getId().equals(request.usuarioId()))
+                ? new PostRequest(principal.getId(), request.titulo(), request.texto(), request.categoria(), request.materia())
+                : request;
+        PostResponse response = postService.criar(finalRequest);
         URI uri = URI.create("/api/posts/" + response.id());
         return ResponseEntity.created(uri).body(response);
     }

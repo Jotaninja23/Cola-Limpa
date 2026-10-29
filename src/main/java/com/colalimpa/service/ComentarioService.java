@@ -31,13 +31,17 @@ public class ComentarioService {
         this.usuarioService = usuarioService;
     }
 
-    public ComentarioResponse criar(ComentarioRequest request) {
+    public ComentarioResponse criar(Long usuarioId, ComentarioRequest request) {
         Post post = postService.buscarEntidadePorId(request.postId());
-        Usuario usuario = usuarioService.buscarEntidadePorId(request.usuarioId());
+        Usuario usuario = usuarioService.buscarEntidadePorId(usuarioId);
 
         Comentario comentario = new Comentario(post, usuario, request.texto());
         Comentario salvo = comentarioRepository.save(comentario);
         return ComentarioResponse.fromEntity(salvo);
+    }
+
+    public ComentarioResponse criar(ComentarioRequest request) {
+        return criar(request.usuarioId(), request);
     }
 
     @Transactional(readOnly = true)

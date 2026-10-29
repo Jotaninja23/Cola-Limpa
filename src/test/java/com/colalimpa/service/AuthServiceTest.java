@@ -15,6 +15,7 @@ import com.colalimpa.model.CodigoAutenticacao;
 import com.colalimpa.model.Usuario;
 import com.colalimpa.repository.CodigoAutenticacaoRepository;
 import com.colalimpa.repository.UsuarioRepository;
+import com.colalimpa.security.JwtService;
 import java.time.LocalDateTime;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
@@ -32,6 +33,12 @@ class AuthServiceTest {
 
     @Mock
     private CodigoAutenticacaoRepository codigoRepository;
+
+    @Mock
+    private EmailSenderService emailSenderService;
+
+    @Mock
+    private JwtService jwtService;
 
     @InjectMocks
     private AuthService authService;
@@ -110,12 +117,14 @@ class AuthServiceTest {
 
         when(usuarioRepository.findByEmail("estudante@email.com")).thenReturn(Optional.of(usuario));
         when(codigoRepository.findTopByUsuarioIdOrderByDataCriacaoDesc(1L)).thenReturn(Optional.of(codigoAtivo));
+        when(jwtService.gerarToken(usuario)).thenReturn("token-jwt-mock");
 
         TokenResponse tokenResponse = authService.validarCodigo(request);
 
         assertThat(tokenResponse).isNotNull();
-        assertThat(tokenResponse.token()).isNotBlank();
+        assertThat(tokenResponse.token()).isEqualTo("token-jwt-mock");
         assertThat(tokenResponse.usuario().email()).isEqualTo("estudante@email.com");
+        assertThat(codigoAtivo.isUtilizado()).isTrue();
     }
 
     @Test

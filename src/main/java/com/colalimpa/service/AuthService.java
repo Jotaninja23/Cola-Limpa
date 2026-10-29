@@ -10,9 +10,9 @@ import com.colalimpa.model.CodigoAutenticacao;
 import com.colalimpa.model.Usuario;
 import com.colalimpa.repository.CodigoAutenticacaoRepository;
 import com.colalimpa.repository.UsuarioRepository;
+import com.colalimpa.security.JwtService;
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
-import java.util.UUID;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,17 +23,24 @@ public class AuthService {
     private static final int LIMITE_REQUISICOES_DIARIAS = 4;
     private static final int INTERVALO_REENVIO_SEGUNDOS = 30;
     private static final int TEMPO_EXPIRACAO_MINUTOS = 5;
+    private static final int LIMITE_TENTATIVAS_INCORRETAS = 3;
 
     private final UsuarioRepository usuarioRepository;
     private final CodigoAutenticacaoRepository codigoRepository;
+    private final EmailSenderService emailSenderService;
+    private final JwtService jwtService;
     private final SecureRandom secureRandom = new SecureRandom();
 
     public AuthService(
             UsuarioRepository usuarioRepository,
-            CodigoAutenticacaoRepository codigoRepository
+            CodigoAutenticacaoRepository codigoRepository,
+            EmailSenderService emailSenderService,
+            JwtService jwtService
     ) {
         this.usuarioRepository = usuarioRepository;
         this.codigoRepository = codigoRepository;
+        this.emailSenderService = emailSenderService;
+        this.jwtService = jwtService;
     }
 
     public void solicitarCodigo(SolicitarCodigoRequest request) {
@@ -68,6 +75,7 @@ public class AuthService {
         );
 
         codigoRepository.save(codigoAutenticacao);
+        emailSenderService.enviarCodigoAcesso(usuario.getEmail(), codigoGerado);
     }
 
     public TokenResponse validarCodigo(ValidarCodigoRequest request) {
@@ -78,8 +86,16 @@ public class AuthService {
                 .findTopByUsuarioIdOrderByDataCriacaoDesc(usuario.getId())
                 .orElseThrow(() -> new BusinessRuleException("Nenhum código ativo encontrado para este e-mail."));
 
+        if (ultimoCodigo.isUtilizado()) {
+            throw new BusinessRuleException("Código de autenticação expirado ou já utilizado.");
+        }
+
         if (ultimoCodigo.isExpirado()) {
             throw new BusinessRuleException("O código informado expirou. Solicite um novo código.");
+        }
+
+        if (ultimoCodigo.getTentativasEnvio() != null && ultimoCodigo.getTentativasEnvio() >= LIMITE_TENTATIVAS_INCORRETAS) {
+            throw new BusinessRuleException("Código bloqueado por excesso de tentativas incorretas.");
         }
 
         if (!ultimoCodigo.getCodigo().equals(request.codigo())) {
@@ -88,7 +104,10 @@ public class AuthService {
             throw new BusinessRuleException("Código de autenticação inválido.");
         }
 
-        String tokenGerado = UUID.randomUUID().toString();
+        ultimoCodigo.marcarComoUtilizado();
+        codigoRepository.save(ultimoCodigo);
+
+        String tokenGerado = jwtService.gerarToken(usuario);
         return new TokenResponse(tokenGerado, UsuarioResponse.fromEntity(usuario));
     }
 }

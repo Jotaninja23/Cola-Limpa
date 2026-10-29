@@ -24,8 +24,8 @@ public class PostService {
         this.usuarioService = usuarioService;
     }
 
-    public PostResponse criar(PostRequest request) {
-        Usuario usuario = usuarioService.buscarEntidadePorId(request.usuarioId());
+    public PostResponse criar(Long usuarioId, PostRequest request) {
+        Usuario usuario = usuarioService.buscarEntidadePorId(usuarioId);
         Post post = new Post(
                 usuario,
                 request.titulo(),
@@ -35,6 +35,10 @@ public class PostService {
         );
         Post salvo = postRepository.save(post);
         return PostResponse.fromEntity(salvo);
+    }
+
+    public PostResponse criar(PostRequest request) {
+        return criar(request.usuarioId(), request);
     }
 
     @Transactional(readOnly = true)

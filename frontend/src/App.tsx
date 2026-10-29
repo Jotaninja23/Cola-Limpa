@@ -12,6 +12,10 @@ import PomodoroTimer from './components/PomodoroTimer';
 import CommunityFeed from './components/CommunityFeed';
 import Dashboard from './components/Dashboard';
 import { usePomodoro } from './hooks/usePomodoro';
+import { AuthProvider } from './context/AuthContext';
+import { useAuth } from './hooks/useAuth';
+import { AuthModal } from './components/auth/AuthModal';
+import { UserMenu } from './components/auth/UserMenu';
 
 type Page = 'pomodoro' | 'community' | 'dashboard';
 
@@ -21,10 +25,14 @@ const NAV_ITEMS: { id: Page; label: string; icon: React.ReactNode }[] = [
   { id: 'dashboard', label: 'Dashboard', icon: <LayoutDashboard size={20} /> },
 ];
 
-function App() {
+export function AppContent() {
+  const { user } = useAuth();
   const [currentPage, setCurrentPage] = useState<Page>('pomodoro');
   const [totalXP, setTotalXP] = useState(350);
   const [xpToast, setXpToast] = useState<number | null>(null);
+
+  // Exibe o XP do usuário se autenticado ou o acumulado da sessão
+  const displayXP = user?.xp !== undefined ? user.xp : totalXP;
 
   const handleXPGain = useCallback((xp: number) => {
     setTotalXP(prev => prev + xp);
@@ -43,8 +51,8 @@ function App() {
   const pomodoro = usePomodoro(handleXPGain);
 
   const xpForNextLevel = 500;
-  const currentLevelXP = totalXP % xpForNextLevel;
-  const level = Math.floor(totalXP / xpForNextLevel) + 1;
+  const currentLevelXP = displayXP % xpForNextLevel;
+  const level = Math.floor(displayXP / xpForNextLevel) + 1;
   const xpPercent = (currentLevelXP / xpForNextLevel) * 100;
 
   const PAGE_HEADERS: Record<Page, { title: string; desc: string }> = {
@@ -96,7 +104,12 @@ function App() {
           <div className="sidebar-xp-bar">
             <div className="sidebar-xp-bar-fill" style={{ width: `${xpPercent}%` }} />
           </div>
-          <div className="sidebar-xp-level">{totalXP} XP total</div>
+          <div className="sidebar-xp-level">{displayXP} XP total</div>
+        </div>
+
+        {/* User / Login Section */}
+        <div className="sidebar-auth-section">
+          <UserMenu />
         </div>
       </aside>
 
@@ -124,11 +137,11 @@ function App() {
             />
           )}
 
-          {currentPage === 'community' && <CommunityFeed />}
+          {currentPage === 'community' && <CommunityFeed requireAuthForActions={true} />}
 
           {currentPage === 'dashboard' && (
             <Dashboard
-              totalXP={totalXP}
+              totalXP={displayXP}
               sessionsCompleted={pomodoro.sessionsCompleted}
               totalMinutesToday={pomodoro.totalMinutesToday}
               streak={7}
@@ -136,8 +149,17 @@ function App() {
           )}
         </div>
       </main>
+
+      {/* Modal global de autenticação */}
+      <AuthModal />
     </div>
   );
 }
 
-export default App;
+export default function App() {
+  return (
+    <AuthProvider>
+      <AppContent />
+    </AuthProvider>
+  );
+}

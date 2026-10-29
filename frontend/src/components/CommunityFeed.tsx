@@ -1,6 +1,8 @@
 import { useState } from 'react';
+import { Plus } from 'lucide-react';
 import type { Comment } from '../types/comment';
 import PostCard, { type Post } from './PostCard';
+import { useAuth } from '../hooks/useAuth';
 
 const MOCK_POSTS: Post[] = [
   {
@@ -98,11 +100,20 @@ const SAMPLE_COMMENTS: Record<number, Comment[]> = {
 
 const CATEGORIES = ['Todos', 'Matemática', 'Português', 'Química', 'História', 'Física', 'Biologia'];
 
-export default function CommunityFeed() {
+export interface CommunityFeedProps {
+  requireAuthForActions?: boolean;
+}
+
+export default function CommunityFeed({ requireAuthForActions = false }: CommunityFeedProps) {
+  const { isAuthenticated, openLoginModal } = useAuth();
   const [posts, setPosts] = useState<Post[]>(MOCK_POSTS);
   const [activeCategory, setActiveCategory] = useState('Todos');
 
   const toggleLike = (id: number) => {
+    if (requireAuthForActions && !isAuthenticated) {
+      openLoginModal('Faça login para demonstrar seu apoio aos colegas!');
+      return;
+    }
     setPosts(prev =>
       prev.map(p =>
         p.id === id
@@ -112,12 +123,32 @@ export default function CommunityFeed() {
     );
   };
 
+  const handleCreatePost = () => {
+    if (requireAuthForActions && !isAuthenticated) {
+      openLoginModal('Entre para compartilhar seus resumos e dúvidas com a turma!');
+      return;
+    }
+    alert('Funcionalidade de publicação conectada! Digite seu resumo.');
+  };
+
   const filteredPosts = activeCategory === 'Todos'
     ? posts
     : posts.filter(p => p.tag === activeCategory);
 
   return (
     <div className="feed-wrapper">
+      <div className="feed-header-actions">
+        <button
+          type="button"
+          className="create-post-btn"
+          onClick={handleCreatePost}
+          aria-label="Criar nova publicação"
+        >
+          <Plus size={18} />
+          <span>Criar Publicação</span>
+        </button>
+      </div>
+
       <div className="feed-categories">
         {CATEGORIES.map(cat => (
           <button

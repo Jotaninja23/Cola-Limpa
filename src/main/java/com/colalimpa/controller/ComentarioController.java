@@ -2,6 +2,9 @@ package com.colalimpa.controller;
 
 import com.colalimpa.dto.ComentarioRequest;
 import com.colalimpa.dto.ComentarioResponse;
+import com.colalimpa.exception.BusinessRuleException;
+import com.colalimpa.security.CurrentUser;
+import com.colalimpa.security.UsuarioPrincipal;
 import com.colalimpa.service.ComentarioService;
 import jakarta.validation.Valid;
 import java.net.URI;
@@ -26,8 +29,18 @@ public class ComentarioController {
     }
 
     @PostMapping
-    public ResponseEntity<ComentarioResponse> criar(@Valid @RequestBody ComentarioRequest request) {
-        ComentarioResponse response = comentarioService.criar(request);
+    public ResponseEntity<ComentarioResponse> criar(
+            @CurrentUser UsuarioPrincipal principal,
+            @Valid @RequestBody ComentarioRequest request
+    ) {
+        Long usuarioId = principal != null ? principal.getId() : request.usuarioId();
+        if (usuarioId == null) {
+            throw new BusinessRuleException("Identificador do usuário autor não informado.");
+        }
+        ComentarioRequest finalRequest = (principal != null && !principal.getId().equals(request.usuarioId()))
+                ? new ComentarioRequest(request.postId(), principal.getId(), request.texto())
+                : request;
+        ComentarioResponse response = comentarioService.criar(finalRequest);
         URI uri = URI.create("/api/comentarios/" + response.id());
         return ResponseEntity.created(uri).body(response);
     }
