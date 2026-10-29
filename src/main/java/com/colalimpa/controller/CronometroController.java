@@ -2,6 +2,9 @@ package com.colalimpa.controller;
 
 import com.colalimpa.dto.CronometroHistoricoRequest;
 import com.colalimpa.dto.CronometroHistoricoResponse;
+import com.colalimpa.exception.BusinessRuleException;
+import com.colalimpa.security.CurrentUser;
+import com.colalimpa.security.UsuarioPrincipal;
 import com.colalimpa.service.CronometroService;
 import jakarta.validation.Valid;
 import java.net.URI;
@@ -26,9 +29,13 @@ public class CronometroController {
 
     @PostMapping
     public ResponseEntity<CronometroHistoricoResponse> registrarSessao(
+            @CurrentUser UsuarioPrincipal principal,
             @Valid @RequestBody CronometroHistoricoRequest request
     ) {
-        CronometroHistoricoResponse response = cronometroService.registrarSessao(request);
+        CronometroHistoricoRequest finalRequest = (principal != null && !principal.getId().equals(request.usuarioId()))
+                ? new CronometroHistoricoRequest(principal.getId(), request.tempoSegundos(), request.tipoSessao())
+                : request;
+        CronometroHistoricoResponse response = cronometroService.registrarSessao(finalRequest);
         URI uri = URI.create("/api/cronometro/" + response.id());
         return ResponseEntity.created(uri).body(response);
     }

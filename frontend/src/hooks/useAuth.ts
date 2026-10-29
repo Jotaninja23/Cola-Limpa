@@ -1,7 +1,8 @@
-import { useState, useCallback } from 'react';
-import type { UserProfile, RegisterFormData } from '../types/auth';
+import { useContext, useState, useCallback } from 'react';
+import { AuthContext } from '../context/authContextDef';
+import type { AuthUser, AuthContextType, RegisterFormData } from '../types/auth';
 
-const DEMO_USER: UserProfile = {
+const DEMO_USER: AuthUser = {
   id: 1,
   nome: 'Estudante ETEC',
   email: 'estudante@etec.sp.gov.br',
@@ -9,20 +10,34 @@ const DEMO_USER: UserProfile = {
   metaDiariaMinutos: 90,
   nivelEscolar: '3º Ano - Técnico',
   isAdmin: false,
+  dataCriacao: '2026-10-29T10:00:00Z',
 };
 
-export function useAuth() {
-  const [user, setUser] = useState<UserProfile | null>(null);
+function useLocalAuthState(): AuthContextType {
+  const [user, setUser] = useState<AuthUser | null>(null);
+  const [token, setToken] = useState<string | null>(null);
   const [step, setStep] = useState<'email' | 'otp'>('email');
   const [emailSentTo, setEmailSentTo] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+  const [loginPromptReason, setLoginPromptReason] = useState<string | null>(null);
 
   const resetAuthFlow = useCallback(() => {
     setStep('email');
     setEmailSentTo('');
     setError(null);
     setIsLoading(false);
+  }, []);
+
+  const openLoginModal = useCallback((reason?: string) => {
+    setLoginPromptReason(reason || null);
+    setIsLoginModalOpen(true);
+  }, []);
+
+  const closeLoginModal = useCallback(() => {
+    setIsLoginModalOpen(false);
+    setLoginPromptReason(null);
   }, []);
 
   const requestOtp = useCallback(async (email: string): Promise<boolean> => {
@@ -84,6 +99,7 @@ export function useAuth() {
           xp: data.usuario.xp ?? 350,
           metaDiariaMinutos: data.usuario.metaDiariaMinutos ?? 60,
           isAdmin: data.usuario.isAdmin ?? false,
+          dataCriacao: data.usuario.dataCriacao || new Date().toISOString(),
         });
         resetAuthFlow();
         return true;
@@ -147,6 +163,7 @@ export function useAuth() {
           metaDiariaMinutos: created.metaDiariaMinutos,
           nivelEscolar: data.nivelEscolar,
           isAdmin: false,
+          dataCriacao: created.dataCriacao || new Date().toISOString(),
         });
         resetAuthFlow();
         return true;
@@ -161,6 +178,7 @@ export function useAuth() {
         metaDiariaMinutos: data.metaDiariaMinutos,
         nivelEscolar: data.nivelEscolar,
         isAdmin: false,
+        dataCriacao: new Date().toISOString(),
       });
       resetAuthFlow();
       return true;
@@ -174,6 +192,7 @@ export function useAuth() {
         metaDiariaMinutos: data.metaDiariaMinutos,
         nivelEscolar: data.nivelEscolar,
         isAdmin: false,
+        dataCriacao: new Date().toISOString(),
       });
       resetAuthFlow();
       return true;
@@ -184,21 +203,53 @@ export function useAuth() {
 
   const logout = useCallback(() => {
     setUser(null);
+    setToken(null);
     resetAuthFlow();
-  }, [resetAuthFlow]);
+    closeLoginModal();
+  }, [closeLoginModal, resetAuthFlow]);
+
+  const solicitarCodigo = useCallback(async (email: string) => {
+    await requestOtp(email);
+  }, [requestOtp]);
+
+  const validarCodigo = useCallback(async (_email: string, codigo: string) => {
+    await verifyOtp(codigo);
+  }, [verifyOtp]);
+
+  const loginComGoogle = useCallback(async (_idToken: string) => {
+    loginAsDemo();
+  }, [loginAsDemo]);
 
   return {
     user,
+    token,
     isAuthenticated: user !== null,
-    step,
-    emailSentTo,
     isLoading,
     error,
+    step,
+    emailSentTo,
+    isLoginModalOpen,
+    loginPromptReason,
+    solicitarCodigo,
+    validarCodigo,
+    loginComGoogle,
     requestOtp,
     verifyOtp,
     loginAsDemo,
     register,
     logout,
     resetAuthFlow,
+    openLoginModal,
+    closeLoginModal,
   };
+}
+
+export function useAuth(): AuthContextType {
+  const context = useContext(AuthContext);
+  const localAuth = useLocalAuthState();
+
+  if (!context) {
+    return localAuth;
+  }
+  return context;
 }

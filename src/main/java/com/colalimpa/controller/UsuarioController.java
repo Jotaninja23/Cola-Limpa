@@ -2,6 +2,8 @@ package com.colalimpa.controller;
 
 import com.colalimpa.dto.UsuarioRequest;
 import com.colalimpa.dto.UsuarioResponse;
+import com.colalimpa.security.CurrentUser;
+import com.colalimpa.security.UsuarioPrincipal;
 import com.colalimpa.service.UsuarioService;
 import jakarta.validation.Valid;
 import java.net.URI;
@@ -24,6 +26,14 @@ public class UsuarioController {
 
     public UsuarioController(UsuarioService usuarioService) {
         this.usuarioService = usuarioService;
+    }
+
+    @GetMapping("/perfil")
+    public ResponseEntity<UsuarioResponse> obterPerfilAtual(@CurrentUser UsuarioPrincipal principal) {
+        if (principal == null) {
+            return ResponseEntity.status(401).build();
+        }
+        return ResponseEntity.ok(usuarioService.buscarPorId(principal.getId()));
     }
 
     @PostMapping

@@ -33,7 +33,7 @@ public class LikeService {
         this.comentarioService = comentarioService;
     }
 
-    public LikeResponse curtir(LikeRequest request) {
+    public LikeResponse curtir(Long usuarioId, LikeRequest request) {
         boolean postInformado = request.postId() != null;
         boolean comentarioInformado = request.comentarioId() != null;
 
@@ -41,10 +41,10 @@ public class LikeService {
             throw new BusinessRuleException("O like deve ser associado exatamente a um post ou a um comentário.");
         }
 
-        Usuario usuario = usuarioService.buscarEntidadePorId(request.usuarioId());
+        Usuario usuario = usuarioService.buscarEntidadePorId(usuarioId);
 
         if (postInformado) {
-            if (likeRepository.existsByUsuarioIdAndPostId(request.usuarioId(), request.postId())) {
+            if (likeRepository.existsByUsuarioIdAndPostId(usuarioId, request.postId())) {
                 throw new BusinessRuleException("O usuário já curtiu esta publicação.");
             }
             Post post = postService.buscarEntidadePorId(request.postId());
@@ -54,7 +54,7 @@ public class LikeService {
             Like salvo = likeRepository.save(like);
             return LikeResponse.fromEntity(salvo);
         } else {
-            if (likeRepository.existsByUsuarioIdAndComentarioId(request.usuarioId(), request.comentarioId())) {
+            if (likeRepository.existsByUsuarioIdAndComentarioId(usuarioId, request.comentarioId())) {
                 throw new BusinessRuleException("O usuário já curtiu este comentário.");
             }
             Comentario comentario = comentarioService.buscarEntidadePorId(request.comentarioId());
@@ -64,6 +64,10 @@ public class LikeService {
             Like salvo = likeRepository.save(like);
             return LikeResponse.fromEntity(salvo);
         }
+    }
+
+    public LikeResponse curtir(LikeRequest request) {
+        return curtir(request.usuarioId(), request);
     }
 
     public void descurtirPost(Long usuarioId, Long postId) {

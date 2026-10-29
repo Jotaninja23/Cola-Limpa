@@ -36,6 +36,9 @@ public class CodigoAutenticacao {
     @Column(name = "tentativas_envio", nullable = false)
     private Integer tentativasEnvio = 0;
 
+    @Column(nullable = false)
+    private Boolean utilizado = false;
+
     @Column(name = "data_criacao", nullable = false, updatable = false)
     private LocalDateTime dataCriacao;
 
@@ -48,6 +51,7 @@ public class CodigoAutenticacao {
         this.canalEnvio = canalEnvio;
         this.expiracao = expiracao;
         this.tentativasEnvio = 0;
+        this.utilizado = false;
     }
 
     @PrePersist
@@ -58,10 +62,25 @@ public class CodigoAutenticacao {
         if (this.tentativasEnvio == null) {
             this.tentativasEnvio = 0;
         }
+        if (this.utilizado == null) {
+            this.utilizado = false;
+        }
     }
 
     public boolean isExpirado() {
         return LocalDateTime.now().isAfter(this.expiracao);
+    }
+
+    public boolean isUtilizado() {
+        return Boolean.TRUE.equals(this.utilizado);
+    }
+
+    public void marcarComoUtilizado() {
+        this.utilizado = true;
+    }
+
+    public boolean isValido() {
+        return !isExpirado() && !isUtilizado() && (tentativasEnvio == null || tentativasEnvio < 3);
     }
 
     public void incrementarTentativas() {
@@ -122,6 +141,14 @@ public class CodigoAutenticacao {
 
     public void setDataCriacao(LocalDateTime dataCriacao) {
         this.dataCriacao = dataCriacao;
+    }
+
+    public Boolean getUtilizado() {
+        return utilizado;
+    }
+
+    public void setUtilizado(Boolean utilizado) {
+        this.utilizado = utilizado;
     }
 }
 

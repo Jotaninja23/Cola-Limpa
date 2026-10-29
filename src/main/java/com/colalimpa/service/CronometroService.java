@@ -31,12 +31,12 @@ public class CronometroService {
         this.usuarioService = usuarioService;
     }
 
-    public CronometroHistoricoResponse registrarSessao(CronometroHistoricoRequest request) {
+    public CronometroHistoricoResponse registrarSessao(Long usuarioId, CronometroHistoricoRequest request) {
         if (request.tempoSegundos() > TEMPO_MAXIMO_SEGUNDOS) {
             throw new BusinessRuleException("O tempo contínuo de estudo excede o limite biológico seguro de 16 horas.");
         }
 
-        Usuario usuario = usuarioService.buscarEntidadePorId(request.usuarioId());
+        Usuario usuario = usuarioService.buscarEntidadePorId(usuarioId);
 
         int xpCalculado = calcularXp(request.tempoSegundos(), request.tipoSessao());
         if (xpCalculado > 0) {
@@ -51,6 +51,10 @@ public class CronometroService {
 
         CronometroHistorico salvo = cronometroHistoricoRepository.save(historico);
         return CronometroHistoricoResponse.fromEntity(salvo, xpCalculado);
+    }
+
+    public CronometroHistoricoResponse registrarSessao(CronometroHistoricoRequest request) {
+        return registrarSessao(request.usuarioId(), request);
     }
 
     @Transactional(readOnly = true)

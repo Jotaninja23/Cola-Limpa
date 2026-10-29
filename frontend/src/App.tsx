@@ -20,7 +20,9 @@ import LandingPage from './components/LandingPage';
 import LoginForm from './components/LoginForm';
 import RegisterForm from './components/RegisterForm';
 import { usePomodoro } from './hooks/usePomodoro';
+import { AuthProvider } from './context/AuthContext';
 import { useAuth } from './hooks/useAuth';
+import { AuthModal } from './components/auth/AuthModal';
 
 export type Page = 'home' | 'pomodoro' | 'community' | 'dashboard' | 'login' | 'register';
 
@@ -37,16 +39,17 @@ const NAV_ITEMS: NavItem[] = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
 ];
 
-interface AppProps {
+export interface AppProps {
   initialPage?: Page;
 }
 
-function App({ initialPage = 'home' }: AppProps) {
+export function AppContent({ initialPage = 'home' }: AppProps) {
   const [currentPage, setCurrentPage] = useState<Page>(initialPage);
   const [totalXP, setTotalXP] = useState(350);
   const [xpToast, setXpToast] = useState<number | null>(null);
 
   const auth = useAuth();
+  const displayXP = auth.user?.xp !== undefined ? auth.user.xp : totalXP;
 
   const handleXPGain = useCallback((xp: number) => {
     setTotalXP(prev => prev + xp);
@@ -64,8 +67,8 @@ function App({ initialPage = 'home' }: AppProps) {
   const pomodoro = usePomodoro(handleXPGain);
 
   const xpForNextLevel = 500;
-  const currentLevelXP = totalXP % xpForNextLevel;
-  const level = Math.floor(totalXP / xpForNextLevel) + 1;
+  const currentLevelXP = displayXP % xpForNextLevel;
+  const level = Math.floor(displayXP / xpForNextLevel) + 1;
   const xpPercent = (currentLevelXP / xpForNextLevel) * 100;
 
   const PAGE_HEADERS: Partial<Record<Page, { title: string; desc: string; icon: typeof Timer }>> = {
@@ -182,7 +185,7 @@ function App({ initialPage = 'home' }: AppProps) {
           <div className="sidebar-xp-bar" role="progressbar" aria-valuenow={currentLevelXP} aria-valuemin={0} aria-valuemax={xpForNextLevel}>
             <div className="sidebar-xp-bar-fill" style={{ width: `${xpPercent}%` }} />
           </div>
-          <div className="sidebar-xp-level">{totalXP} XP total</div>
+          <div className="sidebar-xp-level">{displayXP} XP total</div>
         </div>
       </aside>
 
@@ -221,11 +224,11 @@ function App({ initialPage = 'home' }: AppProps) {
             />
           )}
 
-          {currentPage === 'community' && <CommunityFeed />}
+          {currentPage === 'community' && <CommunityFeed requireAuthForActions={true} />}
 
           {currentPage === 'dashboard' && (
             <Dashboard
-              totalXP={totalXP}
+              totalXP={displayXP}
               sessionsCompleted={pomodoro.sessionsCompleted}
               totalMinutesToday={pomodoro.totalMinutesToday}
               streak={7}
@@ -269,8 +272,17 @@ function App({ initialPage = 'home' }: AppProps) {
           )}
         </div>
       </main>
+
+      {/* Modal global de autenticação */}
+      <AuthModal />
     </div>
   );
 }
 
-export default App;
+export default function App({ initialPage = 'home' }: AppProps) {
+  return (
+    <AuthProvider>
+      <AppContent initialPage={initialPage} />
+    </AuthProvider>
+  );
+}
