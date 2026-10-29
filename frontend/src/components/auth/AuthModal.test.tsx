@@ -2,6 +2,7 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { AuthModal } from './AuthModal';
 import * as UseAuthModule from '../../hooks/useAuth';
+import { DEFAULT_AUTH_CONTEXT } from '../../context/authContextDef';
 import type { AuthContextType } from '../../types/auth';
 
 describe('AuthModal Component', () => {
@@ -9,10 +10,7 @@ describe('AuthModal Component', () => {
 
   beforeEach(() => {
     mockAuth = {
-      user: null,
-      token: null,
-      isAuthenticated: false,
-      isLoading: false,
+      ...DEFAULT_AUTH_CONTEXT,
       isLoginModalOpen: true,
       loginPromptReason: 'Faça login para continuar',
       solicitarCodigo: vi.fn().mockResolvedValue(undefined),

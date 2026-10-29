@@ -2,6 +2,7 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import CommunityFeed from './CommunityFeed';
 import * as UseAuthModule from '../hooks/useAuth';
+import { DEFAULT_AUTH_CONTEXT } from '../context/authContextDef';
 import type { AuthContextType } from '../types/auth';
 
 describe('CommunityFeed', () => {
@@ -84,18 +85,8 @@ describe('CommunityFeed', () => {
   it('should trigger login modal when unauthenticated visitor attempts to like or create post with requireAuthForActions enabled', () => {
     const mockOpenLogin = vi.fn();
     const mockAuth: AuthContextType = {
-      user: null,
-      token: null,
-      isAuthenticated: false,
-      isLoading: false,
-      isLoginModalOpen: false,
-      loginPromptReason: null,
-      solicitarCodigo: vi.fn(),
-      validarCodigo: vi.fn(),
-      loginComGoogle: vi.fn(),
-      logout: vi.fn(),
+      ...DEFAULT_AUTH_CONTEXT,
       openLoginModal: mockOpenLogin,
-      closeLoginModal: vi.fn(),
     };
     vi.spyOn(UseAuthModule, 'useAuth').mockReturnValue(mockAuth);
 
@@ -116,6 +107,7 @@ describe('CommunityFeed', () => {
 
   it('should allow liking post directly when authenticated and requireAuthForActions is true', () => {
     const mockAuth: AuthContextType = {
+      ...DEFAULT_AUTH_CONTEXT,
       user: {
         id: 1,
         nome: 'Aluno Ativo',
@@ -126,15 +118,6 @@ describe('CommunityFeed', () => {
       },
       token: 'jwt-dummy',
       isAuthenticated: true,
-      isLoading: false,
-      isLoginModalOpen: false,
-      loginPromptReason: null,
-      solicitarCodigo: vi.fn(),
-      validarCodigo: vi.fn(),
-      loginComGoogle: vi.fn(),
-      logout: vi.fn(),
-      openLoginModal: vi.fn(),
-      closeLoginModal: vi.fn(),
     };
     vi.spyOn(UseAuthModule, 'useAuth').mockReturnValue(mockAuth);
 

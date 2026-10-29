@@ -2,16 +2,12 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { UserMenu } from './UserMenu';
 import * as UseAuthModule from '../../hooks/useAuth';
+import { DEFAULT_AUTH_CONTEXT } from '../../context/authContextDef';
 import type { AuthContextType } from '../../types/auth';
 
 describe('UserMenu Component', () => {
   const baseMockAuth: AuthContextType = {
-    user: null,
-    token: null,
-    isAuthenticated: false,
-    isLoading: false,
-    isLoginModalOpen: false,
-    loginPromptReason: null,
+    ...DEFAULT_AUTH_CONTEXT,
     solicitarCodigo: vi.fn(),
     validarCodigo: vi.fn(),
     loginComGoogle: vi.fn(),
