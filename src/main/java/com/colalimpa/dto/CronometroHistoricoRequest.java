@@ -1,4 +1,4 @@
-package com.colalimpa.dto;
+﻿package com.colalimpa.dto;
 
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.NotBlank;

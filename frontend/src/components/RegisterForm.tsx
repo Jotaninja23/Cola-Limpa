@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react';
+﻿import { useState, type FormEvent } from 'react';
 import { User, Mail, Phone, Clock, GraduationCap, ArrowRight, AlertCircle } from 'lucide-react';
 import type { RegisterFormData } from '../types/auth';
 

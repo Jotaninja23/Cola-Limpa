@@ -16,6 +16,9 @@ public interface ComentarioRepository extends JpaRepository<Comentario, Long> {
     @EntityGraph(attributePaths = {"usuario"})
     List<Comentario> findByPostIdAndQtDenunciasLessThanOrderByDataCriacaoAsc(Long postId, Integer limiteDenuncias);
 
+    @EntityGraph(attributePaths = {"usuario", "post"})
+    List<Comentario> findByQtDenunciasGreaterThanEqualOrderByDataCriacaoDesc(Integer limiteDenuncias);
+
     @Override
     @EntityGraph(attributePaths = {"usuario", "post"})
     Optional<Comentario> findById(Long id);

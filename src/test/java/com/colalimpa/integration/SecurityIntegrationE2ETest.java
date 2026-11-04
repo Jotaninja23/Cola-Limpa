@@ -8,6 +8,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.colalimpa.dto.PostRequest;
 import com.colalimpa.dto.SolicitarCodigoRequest;
+import com.colalimpa.dto.UsuarioRequest;
 import com.colalimpa.dto.ValidarCodigoRequest;
 import com.colalimpa.model.CodigoAutenticacao;
 import com.colalimpa.model.Usuario;
@@ -123,5 +124,44 @@ class SecurityIntegrationE2ETest {
                         .content(objectMapper.writeValueAsString(valRequest)))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.title").value("Violação de regra de negócio"));
+    }
+
+    @Test
+    void shouldAllowPublicAccessToRegisterUser() throws Exception {
+        UsuarioRequest request = new UsuarioRequest("Novo Aluno", "novo.aluno@email.com", null, null, 60);
+
+        mockMvc.perform(post("/api/usuarios")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.id").isNumber())
+                .andExpect(jsonPath("$.nome").value("Novo Aluno"));
+    }
+
+    @Test
+    void shouldDenyAccessToModerationForNormalUser() throws Exception {
+        Usuario usuarioNormal = new Usuario("Aluno Normal", "normal@email.com", null, null, null);
+        usuarioNormal.setIsAdmin(false);
+        usuarioRepository.save(usuarioNormal);
+
+        String userToken = jwtService.gerarToken(usuarioNormal);
+
+        mockMvc.perform(get("/api/moderacao/posts")
+                        .header("Authorization", "Bearer " + userToken))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.status").value(403));
+    }
+
+    @Test
+    void shouldAllowAccessToModerationForAdminUser() throws Exception {
+        Usuario admin = new Usuario("Admin ETEC", "admin@email.com", null, null, null);
+        admin.setIsAdmin(true);
+        usuarioRepository.save(admin);
+
+        String adminToken = jwtService.gerarToken(admin);
+
+        mockMvc.perform(get("/api/moderacao/posts")
+                        .header("Authorization", "Bearer " + adminToken))
+                .andExpect(status().isOk());
     }
 }

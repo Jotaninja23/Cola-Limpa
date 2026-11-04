@@ -128,4 +128,14 @@ describe('CommunityFeed', () => {
 
     expect(screen.getByRole('button', { name: /descurtir publicação \(25 curtidas\)/i })).toHaveClass('liked');
   });
+
+  it('should filter posts by search query input in real time', () => {
+    render(<CommunityFeed />);
+
+    const searchInput = screen.getByPlaceholderText(/pesquisar publicações, tópicos ou autores/i);
+    fireEvent.change(searchInput, { target: { value: 'Bhaskara' } });
+
+    expect(screen.getByText('Dica para resolver equações do 2º grau mais rápido!')).toBeInTheDocument();
+    expect(screen.queryByText('Resumo: Figuras de linguagem para a prova')).not.toBeInTheDocument();
+  });
 });

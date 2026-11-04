@@ -45,5 +45,20 @@ describe('Dashboard', () => {
     expect(screen.getByText('Sáb')).toBeInTheDocument();
     expect(screen.getByText('Dom')).toBeInTheDocument();
   });
+
+  it('should render daily study goal with percentage and progress bar', () => {
+    render(
+      <Dashboard
+        totalXP={300}
+        sessionsCompleted={1}
+        totalMinutesToday={45}
+        streak={3}
+        metaDiariaMinutos={90}
+      />
+    );
+
+    expect(screen.getByText('Meta Diária de Estudos')).toBeInTheDocument();
+    expect(screen.getByText(/45 de 90 min \(50%\)/i)).toBeInTheDocument();
+  });
 });
 

@@ -1,4 +1,4 @@
-import type { Comment } from '../types/comment';
+﻿import type { Comment } from '../types/comment';
 import { Heart, Flag, Trash2 } from 'lucide-react';
 
 interface CommentItemProps {

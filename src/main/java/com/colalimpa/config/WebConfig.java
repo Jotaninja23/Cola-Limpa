@@ -1,4 +1,4 @@
-package com.colalimpa.config;
+﻿package com.colalimpa.config;
 
 import java.util.List;
 import org.springframework.beans.factory.annotation.Value;

@@ -91,4 +91,25 @@ describe('PomodoroTimer', () => {
     expect(screen.getByText('75')).toBeInTheDocument();
     expect(screen.getByText('XP Ganho')).toBeInTheDocument();
   });
+
+  it('should render finish button in free study mode and trigger onFinishFreeStudy', () => {
+    const handleFinishFree = vi.fn();
+    render(
+      <PomodoroTimer
+        {...defaultProps}
+        mode="free"
+        modeLabel="Estudo Livre"
+        timeLeft={300}
+        onFinishFreeStudy={handleFinishFree}
+      />
+    );
+
+    expect(screen.getByText('Estudo Livre')).toBeInTheDocument();
+    expect(screen.getByText('+1 XP acumulados')).toBeInTheDocument();
+
+    const finishBtn = screen.getByRole('button', { name: /concluir e salvar estudo livre/i });
+    fireEvent.click(finishBtn);
+
+    expect(handleFinishFree).toHaveBeenCalledTimes(1);
+  });
 });

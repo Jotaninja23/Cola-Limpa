@@ -1,4 +1,4 @@
-import { useState, type FormEvent, type KeyboardEvent } from 'react';
+﻿import { useState, type FormEvent, type KeyboardEvent } from 'react';
 import { Send } from 'lucide-react';
 
 interface CommentFormProps {

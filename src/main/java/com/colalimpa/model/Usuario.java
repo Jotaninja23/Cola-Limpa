@@ -1,4 +1,4 @@
-package com.colalimpa.model;
+﻿package com.colalimpa.model;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

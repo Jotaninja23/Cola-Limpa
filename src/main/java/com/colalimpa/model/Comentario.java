@@ -78,6 +78,16 @@ public class Comentario {
         this.qtDenuncias = (this.qtDenuncias == null ? 0 : this.qtDenuncias) + 1;
     }
 
+    public void zerarDenuncias() {
+        this.qtDenuncias = 0;
+    }
+
+    public void atualizarTexto(String novoTexto) {
+        if (novoTexto != null && !novoTexto.isBlank()) {
+            this.texto = novoTexto;
+        }
+    }
+
     public Long getId() {
         return id;
     }

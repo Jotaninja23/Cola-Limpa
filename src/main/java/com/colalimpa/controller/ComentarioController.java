@@ -57,8 +57,15 @@ public class ComentarioController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> remover(@PathVariable Long id) {
-        comentarioService.remover(id);
+    public ResponseEntity<Void> remover(
+            @CurrentUser UsuarioPrincipal principal,
+            @PathVariable Long id
+    ) {
+        if (principal != null) {
+            comentarioService.remover(id, principal.getId(), principal.isAdmin());
+        } else {
+            comentarioService.remover(id);
+        }
         return ResponseEntity.noContent().build();
     }
 }

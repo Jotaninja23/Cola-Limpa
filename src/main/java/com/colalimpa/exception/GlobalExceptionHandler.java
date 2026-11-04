@@ -1,4 +1,4 @@
-package com.colalimpa.exception;
+﻿package com.colalimpa.exception;
 
 import java.net.URI;
 import java.time.Instant;

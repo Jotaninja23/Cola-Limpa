@@ -107,4 +107,20 @@ class PostRepositoryTest {
         assertThat(posts).hasSize(2);
         assertThat(posts).extracting(Post::getTitulo).containsExactly("Segundo Post", "Primeiro Post");
     }
+
+    @Test
+    void shouldFindPostsWithReportsEqualOrAboveThresholdForModeration() {
+        Post postLimpo = new Post(autor, "Dica Limpa", "Texto do post", "Dica", "História");
+        Post postDenunciado = new Post(autor, "Post Suspeito", "Spam", "Spam", "Geral");
+        postDenunciado.setQtDenuncias(5);
+
+        entityManager.persist(postLimpo);
+        entityManager.persist(postDenunciado);
+        entityManager.flush();
+
+        List<Post> moderacao = postRepository.findByQtDenunciasGreaterThanEqualOrderByDataCriacaoDesc(5);
+
+        assertThat(moderacao).hasSize(1);
+        assertThat(moderacao.get(0).getTitulo()).isEqualTo("Post Suspeito");
+    }
 }

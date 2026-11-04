@@ -1,4 +1,4 @@
-package com.colalimpa.exception;
+﻿package com.colalimpa.exception;
 
 import static org.assertj.core.api.Assertions.assertThat;
 

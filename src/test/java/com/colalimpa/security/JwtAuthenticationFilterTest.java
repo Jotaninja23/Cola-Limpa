@@ -1,4 +1,4 @@
-package com.colalimpa.security;
+﻿package com.colalimpa.security;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.verify;

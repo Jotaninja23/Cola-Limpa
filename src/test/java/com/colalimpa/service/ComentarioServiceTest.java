@@ -21,6 +21,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.access.AccessDeniedException;
 
 @ExtendWith(MockitoExtension.class)
 class ComentarioServiceTest {
@@ -118,5 +119,55 @@ class ComentarioServiceTest {
         comentarioService.remover(100L);
 
         verify(comentarioRepository).delete(comentario);
+    }
+
+    @Test
+    void shouldDeleteCommentSuccessfullyWhenUserIsAuthor() {
+        when(comentarioRepository.findById(100L)).thenReturn(Optional.of(comentario));
+
+        comentarioService.remover(100L, 1L, false);
+
+        verify(comentarioRepository).delete(comentario);
+    }
+
+    @Test
+    void shouldDeleteCommentSuccessfullyWhenUserIsAdmin() {
+        when(comentarioRepository.findById(100L)).thenReturn(Optional.of(comentario));
+
+        comentarioService.remover(100L, 999L, true);
+
+        verify(comentarioRepository).delete(comentario);
+    }
+
+    @Test
+    void shouldThrowAccessDeniedWhenDeletingCommentByNonAuthorNonAdmin() {
+        when(comentarioRepository.findById(100L)).thenReturn(Optional.of(comentario));
+
+        assertThatThrownBy(() -> comentarioService.remover(100L, 2L, false))
+                .isInstanceOf(AccessDeniedException.class)
+                .hasMessageContaining("Você não possui permissão para remover este comentário.");
+    }
+
+    @Test
+    void shouldListReportedCommentsForModeration() {
+        when(comentarioRepository.findByQtDenunciasGreaterThanEqualOrderByDataCriacaoDesc(5))
+                .thenReturn(List.of(comentario));
+
+        List<ComentarioResponse> ocultados = comentarioService.listarOcultadosPorDenuncia();
+
+        assertThat(ocultados).hasSize(1);
+    }
+
+    @Test
+    void shouldApproveCommentAndResetReports() {
+        comentario.setQtDenuncias(5);
+        when(comentarioRepository.findById(100L)).thenReturn(Optional.of(comentario));
+        when(comentarioRepository.save(any(Comentario.class))).thenReturn(comentario);
+
+        ComentarioResponse response = comentarioService.aprovarComentario(100L);
+
+        assertThat(response).isNotNull();
+        assertThat(comentario.getQtDenuncias()).isEqualTo(0);
+        verify(comentarioRepository).save(comentario);
     }
 }

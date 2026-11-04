@@ -154,5 +154,38 @@ describe('usePomodoro', () => {
     expect(result.current.mode).toBe('focus');
     expect(result.current.timeLeft).toBe(1500);
   });
+
+  it('should support free study mode counting upwards and awarding proportional XP on finish', () => {
+    const handleXpGain = vi.fn();
+    const { result } = renderHook(() => usePomodoro(handleXpGain));
+
+    act(() => {
+      result.current.setMode('free');
+    });
+
+    expect(result.current.mode).toBe('free');
+    expect(result.current.modeLabel).toBe('Estudo Livre');
+    expect(result.current.timeLeft).toBe(0);
+
+    act(() => {
+      result.current.toggleTimer();
+    });
+
+    act(() => {
+      vi.advanceTimersByTime(360 * 1000); // 360 segundos = 6 minutos = 2 XP (180s por XP)
+    });
+
+    expect(result.current.freeStudySeconds).toBe(360);
+    expect(result.current.timeLeft).toBe(360);
+
+    act(() => {
+      result.current.finishFreeStudy();
+    });
+
+    expect(handleXpGain).toHaveBeenCalledWith(2);
+    expect(result.current.totalMinutesToday).toBe(6);
+    expect(result.current.freeStudySeconds).toBe(0);
+    expect(result.current.isRunning).toBe(false);
+  });
 });
 

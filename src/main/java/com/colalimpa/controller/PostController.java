@@ -2,6 +2,7 @@ package com.colalimpa.controller;
 
 import com.colalimpa.dto.PostRequest;
 import com.colalimpa.dto.PostResponse;
+import com.colalimpa.dto.PostUpdateRequest;
 import com.colalimpa.exception.BusinessRuleException;
 import com.colalimpa.security.CurrentUser;
 import com.colalimpa.security.UsuarioPrincipal;
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -69,6 +71,17 @@ public class PostController {
         return ResponseEntity.ok(postService.listarFeedPublico());
     }
 
+    @PutMapping("/{id}")
+    public ResponseEntity<PostResponse> editar(
+            @CurrentUser UsuarioPrincipal principal,
+            @PathVariable Long id,
+            @Valid @RequestBody PostUpdateRequest request
+    ) {
+        Long usuarioId = principal != null ? principal.getId() : null;
+        boolean isAdmin = principal != null && principal.isAdmin();
+        return ResponseEntity.ok(postService.editar(id, usuarioId, isAdmin, request));
+    }
+
     @PostMapping("/{id}/denunciar")
     public ResponseEntity<Void> denunciar(@PathVariable Long id) {
         postService.denunciar(id);
@@ -76,8 +89,15 @@ public class PostController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> remover(@PathVariable Long id) {
-        postService.remover(id);
+    public ResponseEntity<Void> remover(
+            @CurrentUser UsuarioPrincipal principal,
+            @PathVariable Long id
+    ) {
+        if (principal != null) {
+            postService.remover(id, principal.getId(), principal.isAdmin());
+        } else {
+            postService.remover(id);
+        }
         return ResponseEntity.noContent().build();
     }
 }

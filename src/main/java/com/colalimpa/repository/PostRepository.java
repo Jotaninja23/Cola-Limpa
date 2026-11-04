@@ -28,6 +28,9 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     List<Post> findByQtDenunciasLessThanOrderByDataCriacaoDesc(Integer limiteDenuncias);
 
     @EntityGraph(attributePaths = {"usuario"})
+    List<Post> findByQtDenunciasGreaterThanEqualOrderByDataCriacaoDesc(Integer limiteDenuncias);
+
+    @EntityGraph(attributePaths = {"usuario"})
     List<Post> findByUsuarioIdOrderByDataCriacaoDesc(Long usuarioId);
 }
 

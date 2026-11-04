@@ -81,4 +81,20 @@ class ComentarioRepositoryTest {
         assertThat(comentarios).extracting(Comentario::getTexto)
                 .containsExactly("Segundo comentário", "Primeiro comentário");
     }
+
+    @Test
+    void shouldFindCommentsWithReportsEqualOrAboveThresholdForModeration() {
+        Comentario comentarioLimpo = new Comentario(post, usuario, "Limpo");
+        Comentario comentarioDenunciado = new Comentario(post, usuario, "Conteúdo inadequado");
+        comentarioDenunciado.setQtDenuncias(5);
+
+        entityManager.persist(comentarioLimpo);
+        entityManager.persist(comentarioDenunciado);
+        entityManager.flush();
+
+        List<Comentario> moderacao = comentarioRepository.findByQtDenunciasGreaterThanEqualOrderByDataCriacaoDesc(5);
+
+        assertThat(moderacao).hasSize(1);
+        assertThat(moderacao.get(0).getTexto()).isEqualTo("Conteúdo inadequado");
+    }
 }

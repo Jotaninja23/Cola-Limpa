@@ -1,4 +1,4 @@
-import type { Comment } from '../types/comment';
+﻿import type { Comment } from '../types/comment';
 import CommentItem from './CommentItem';
 import CommentForm from './CommentForm';
 

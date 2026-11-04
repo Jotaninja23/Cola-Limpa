@@ -1,4 +1,4 @@
-package com.colalimpa.repository;
+﻿package com.colalimpa.repository;
 
 import com.colalimpa.model.CodigoAutenticacao;
 import java.time.LocalDateTime;

@@ -1,4 +1,4 @@
-package com.colalimpa.repository;
+﻿package com.colalimpa.repository;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;

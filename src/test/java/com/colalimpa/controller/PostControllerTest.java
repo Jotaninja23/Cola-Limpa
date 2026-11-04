@@ -7,12 +7,14 @@ import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.colalimpa.dto.PostRequest;
 import com.colalimpa.dto.PostResponse;
+import com.colalimpa.dto.PostUpdateRequest;
 import com.colalimpa.service.PostService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.LocalDateTime;
@@ -143,6 +145,23 @@ class PostControllerTest {
 
         mockMvc.perform(post("/api/posts/10/denunciar"))
                 .andExpect(status().isNoContent());
+    }
+
+    @Test
+    void shouldReturnOkWhenUpdatingPost() throws Exception {
+        PostUpdateRequest updateRequest = new PostUpdateRequest("Título Editado", "Texto novo", "Resumo", "História");
+        PostResponse response = new PostResponse(
+                10L, 1L, "Aluno", null, "Título Editado", "Texto novo", "Resumo", "História", 0, 0, LocalDateTime.now()
+        );
+
+        when(postService.editar(eq(10L), any(), any(Boolean.class), any())).thenReturn(response);
+
+        mockMvc.perform(put("/api/posts/10")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(updateRequest)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(10L))
+                .andExpect(jsonPath("$.titulo").value("Título Editado"));
     }
 
     @Test

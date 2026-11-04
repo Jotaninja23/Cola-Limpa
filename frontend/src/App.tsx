@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import {
   Home,
   Timer,
@@ -9,6 +9,8 @@ import {
   UserPlus,
   LogOut,
   Award,
+  ShieldCheck,
+  UserCheck,
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import './App.css';
@@ -19,12 +21,16 @@ import Dashboard from './components/Dashboard';
 import LandingPage from './components/LandingPage';
 import LoginForm from './components/LoginForm';
 import RegisterForm from './components/RegisterForm';
+import ModerationPanel from './components/ModerationPanel';
+import EditProfileModal from './components/EditProfileModal';
 import { usePomodoro } from './hooks/usePomodoro';
 import { AuthProvider } from './context/AuthContext';
 import { useAuth } from './hooks/useAuth';
 import { AuthModal } from './components/auth/AuthModal';
+import { authService } from './services/authService';
+import { cronometroService } from './services/cronometroService';
 
-export type Page = 'home' | 'pomodoro' | 'community' | 'dashboard' | 'login' | 'register';
+export type Page = 'home' | 'pomodoro' | 'community' | 'dashboard' | 'login' | 'register' | 'moderation';
 
 interface NavItem {
   id: Page;
@@ -32,7 +38,7 @@ interface NavItem {
   icon: typeof Home;
 }
 
-const NAV_ITEMS: NavItem[] = [
+const BASE_NAV_ITEMS: NavItem[] = [
   { id: 'home', label: 'Início', icon: Home },
   { id: 'pomodoro', label: 'Pomodoro', icon: Timer },
   { id: 'community', label: 'Comunidade', icon: Users },
@@ -47,6 +53,8 @@ export function AppContent({ initialPage = 'home' }: AppProps) {
   const [currentPage, setCurrentPage] = useState<Page>(initialPage);
   const [totalXP, setTotalXP] = useState(350);
   const [xpToast, setXpToast] = useState<number | null>(null);
+  const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
+  const [userWeeklyMinutes, setUserWeeklyMinutes] = useState<number[]>([45, 60, 30, 90, 75, 50, 0]);
 
   const auth = useAuth();
   const displayXP = auth.user?.xp !== undefined ? auth.user.xp : totalXP;
@@ -65,6 +73,30 @@ export function AppContent({ initialPage = 'home' }: AppProps) {
   }, []);
 
   const pomodoro = usePomodoro(handleXPGain);
+
+  // Carrega histórico real de cronômetro quando autenticado
+  useEffect(() => {
+    if (auth.isAuthenticated && auth.user?.id) {
+      cronometroService
+        .listarHistorico(auth.user.id)
+        .then(sessions => {
+          if (sessions && sessions.length > 0) {
+            const minutesByDay = [0, 0, 0, 0, 0, 0, 0];
+            const now = new Date();
+            sessions.forEach(s => {
+              const date = new Date(s.dataCriacao);
+              const diffDays = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24));
+              if (diffDays >= 0 && diffDays < 7) {
+                const dayIndex = (date.getDay() + 6) % 7;
+                minutesByDay[dayIndex] += Math.round(s.tempoSegundos / 60);
+              }
+            });
+            setUserWeeklyMinutes(minutesByDay);
+          }
+        })
+        .catch(() => {});
+    }
+  }, [auth.isAuthenticated, auth.user?.id]);
 
   const xpForNextLevel = 500;
   const currentLevelXP = displayXP % xpForNextLevel;
@@ -87,7 +119,17 @@ export function AppContent({ initialPage = 'home' }: AppProps) {
       desc: 'Acompanhe seu progresso, metas diárias e assiduidade',
       icon: LayoutDashboard,
     },
+    moderation: {
+      title: 'Moderação',
+      desc: 'Revise postagens e comentários reportados pela comunidade acadêmica',
+      icon: ShieldCheck,
+    },
   };
+
+  const navItems = [...BASE_NAV_ITEMS];
+  if (auth.user?.isAdmin) {
+    navItems.push({ id: 'moderation', label: 'Moderação', icon: ShieldCheck });
+  }
 
   const handleLoginSuccess = () => {
     setCurrentPage('dashboard');
@@ -95,6 +137,19 @@ export function AppContent({ initialPage = 'home' }: AppProps) {
 
   const handleRegisterSuccess = () => {
     setCurrentPage('dashboard');
+  };
+
+  const handleSaveProfile = async (data: { nome: string; telefone?: string; fotoUrl?: string; metaDiariaMinutos?: number }) => {
+    if (!auth.user) return;
+    try {
+      const updated = await authService.atualizarPerfil(auth.user.id, data);
+      localStorage.setItem('cola_limpa_user', JSON.stringify(updated));
+      window.location.reload();
+    } catch {
+      // Atualização local de fallback
+      const updated = { ...auth.user, ...data };
+      localStorage.setItem('cola_limpa_user', JSON.stringify(updated));
+    }
   };
 
   return (
@@ -116,7 +171,7 @@ export function AppContent({ initialPage = 'home' }: AppProps) {
         </div>
 
         <nav className="sidebar-nav">
-          {NAV_ITEMS.map(({ id, label, icon: Icon }) => (
+          {navItems.map(({ id, label, icon: Icon }) => (
             <button
               key={id}
               id={`nav-${id}`}
@@ -132,18 +187,26 @@ export function AppContent({ initialPage = 'home' }: AppProps) {
 
         <div className="sidebar-auth-section">
           {auth.isAuthenticated && auth.user ? (
-            <div className="sidebar-user-card">
+            <div className="sidebar-user-card" style={{ cursor: 'pointer' }} onClick={() => setIsEditProfileOpen(true)}>
               <div className="sidebar-user-avatar" aria-hidden="true">
                 {auth.user.nome.substring(0, 2).toUpperCase()}
               </div>
               <div className="sidebar-user-details">
-                <span className="sidebar-user-name">{auth.user.nome}</span>
-                <span className="sidebar-user-role">{auth.user.nivelEscolar || 'Estudante'}</span>
+                <span className="sidebar-user-name" style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                  {auth.user.nome}
+                  <UserCheck size={14} color="#C57D1E" />
+                </span>
+                <span className="sidebar-user-role">
+                  {auth.user.isAdmin ? 'Administrador' : auth.user.nivelEscolar || 'Estudante'}
+                </span>
               </div>
               <button
                 type="button"
                 className="sidebar-logout-btn"
-                onClick={auth.logout}
+                onClick={e => {
+                  e.stopPropagation();
+                  auth.logout();
+                }}
                 title="Encerrar sessão"
                 aria-label="Encerrar sessão"
               >
@@ -218,9 +281,11 @@ export function AppContent({ initialPage = 'home' }: AppProps) {
               sessionsCompleted={pomodoro.sessionsCompleted}
               totalMinutesToday={pomodoro.totalMinutesToday}
               weeklyData={pomodoro.weeklyData}
+              isBiologicalLimitReached={pomodoro.isBiologicalLimitReached}
               onToggle={pomodoro.toggleTimer}
               onReset={pomodoro.resetTimer}
               onSetMode={pomodoro.setMode}
+              onFinishFreeStudy={pomodoro.finishFreeStudy}
             />
           )}
 
@@ -232,8 +297,12 @@ export function AppContent({ initialPage = 'home' }: AppProps) {
               sessionsCompleted={pomodoro.sessionsCompleted}
               totalMinutesToday={pomodoro.totalMinutesToday}
               streak={7}
+              metaDiariaMinutos={auth.user?.metaDiariaMinutos || 90}
+              weeklyData={userWeeklyMinutes}
             />
           )}
+
+          {currentPage === 'moderation' && <ModerationPanel />}
 
           {currentPage === 'login' && (
             <LoginForm
@@ -275,6 +344,16 @@ export function AppContent({ initialPage = 'home' }: AppProps) {
 
       {/* Modal global de autenticação */}
       <AuthModal />
+
+      {/* Modal de edição de perfil */}
+      {auth.user && (
+        <EditProfileModal
+          isOpen={isEditProfileOpen}
+          onClose={() => setIsEditProfileOpen(false)}
+          user={auth.user}
+          onSave={handleSaveProfile}
+        />
+      )}
     </div>
   );
 }

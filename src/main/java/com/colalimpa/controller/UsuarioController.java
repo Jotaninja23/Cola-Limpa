@@ -9,6 +9,7 @@ import jakarta.validation.Valid;
 import java.net.URI;
 import java.util.List;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -55,14 +56,24 @@ public class UsuarioController {
 
     @PutMapping("/{id}")
     public ResponseEntity<UsuarioResponse> atualizarPerfil(
+            @CurrentUser UsuarioPrincipal principal,
             @PathVariable Long id,
             @Valid @RequestBody UsuarioRequest request
     ) {
+        if (principal != null && !principal.isAdmin() && !principal.getId().equals(id)) {
+            throw new AccessDeniedException("Você não tem permissão para atualizar os dados deste usuário.");
+        }
         return ResponseEntity.ok(usuarioService.atualizarPerfil(id, request));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> excluir(@PathVariable Long id) {
+    public ResponseEntity<Void> excluir(
+            @CurrentUser UsuarioPrincipal principal,
+            @PathVariable Long id
+    ) {
+        if (principal != null && !principal.isAdmin() && !principal.getId().equals(id)) {
+            throw new AccessDeniedException("Você não tem permissão para excluir este usuário.");
+        }
         usuarioService.excluir(id);
         return ResponseEntity.noContent().build();
     }

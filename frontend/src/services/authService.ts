@@ -26,5 +26,12 @@ export const authService = {
   async obterPerfilAtual(): Promise<AuthUser> {
     return apiClient<AuthUser>('/api/usuarios/perfil');
   },
+
+  async atualizarPerfil(id: number, data: { nome?: string; email?: string; telefone?: string; fotoUrl?: string; metaDiariaMinutos?: number }): Promise<AuthUser> {
+    return apiClient<AuthUser>(`/api/usuarios/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  },
 };
 

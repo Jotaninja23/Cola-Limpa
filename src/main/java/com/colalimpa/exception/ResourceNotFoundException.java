@@ -1,4 +1,4 @@
-package com.colalimpa.exception;
+﻿package com.colalimpa.exception;
 
 public class ResourceNotFoundException extends RuntimeException {
 

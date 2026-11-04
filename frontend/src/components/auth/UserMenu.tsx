@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { LogIn, LogOut, ShieldCheck } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 

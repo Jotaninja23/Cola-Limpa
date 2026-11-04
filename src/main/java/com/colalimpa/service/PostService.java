@@ -2,11 +2,13 @@ package com.colalimpa.service;
 
 import com.colalimpa.dto.PostRequest;
 import com.colalimpa.dto.PostResponse;
+import com.colalimpa.dto.PostUpdateRequest;
 import com.colalimpa.exception.ResourceNotFoundException;
 import com.colalimpa.model.Post;
 import com.colalimpa.model.Usuario;
 import com.colalimpa.repository.PostRepository;
 import java.util.List;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -39,6 +41,16 @@ public class PostService {
 
     public PostResponse criar(PostRequest request) {
         return criar(request.usuarioId(), request);
+    }
+
+    public PostResponse editar(Long id, Long usuarioId, boolean isAdmin, PostUpdateRequest request) {
+        Post post = buscarEntidadePorId(id);
+        if (!isAdmin && (usuarioId == null || !post.getUsuario().getId().equals(usuarioId))) {
+            throw new AccessDeniedException("Você não possui permissão para editar esta publicação.");
+        }
+        post.atualizar(request.titulo(), request.texto(), request.categoria(), request.materia());
+        Post salvo = postRepository.save(post);
+        return PostResponse.fromEntity(salvo);
     }
 
     @Transactional(readOnly = true)
@@ -91,9 +103,32 @@ public class PostService {
         postRepository.save(post);
     }
 
+    public void remover(Long id, Long usuarioId, boolean isAdmin) {
+        Post post = buscarEntidadePorId(id);
+        if (!isAdmin && (usuarioId == null || !post.getUsuario().getId().equals(usuarioId))) {
+            throw new AccessDeniedException("Você não possui permissão para remover esta publicação.");
+        }
+        postRepository.delete(post);
+    }
+
     public void remover(Long id) {
         Post post = buscarEntidadePorId(id);
         postRepository.delete(post);
+    }
+
+    @Transactional(readOnly = true)
+    public List<PostResponse> listarOcultadosPorDenuncia() {
+        return postRepository.findByQtDenunciasGreaterThanEqualOrderByDataCriacaoDesc(LIMITE_DENUNCIAS_OCULTACAO)
+                .stream()
+                .map(PostResponse::fromEntity)
+                .toList();
+    }
+
+    public PostResponse aprovarPublicacao(Long id) {
+        Post post = buscarEntidadePorId(id);
+        post.zerarDenuncias();
+        Post salvo = postRepository.save(post);
+        return PostResponse.fromEntity(salvo);
     }
 }
 

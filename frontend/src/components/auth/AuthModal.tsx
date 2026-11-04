@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+﻿import React, { useState, useEffect, useCallback } from 'react';
 import { X, Mail, ArrowLeft, Loader2, Sparkles, AlertCircle } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { PinInput } from './PinInput';

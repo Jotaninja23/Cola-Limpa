@@ -1,38 +1,42 @@
 import { useState } from 'react';
-import { Heart, MessageCircle, Share2, Bookmark } from 'lucide-react';
+import { Heart, MessageCircle, Share2, Bookmark, Flag, Trash2, Edit3 } from 'lucide-react';
 import type { Comment } from '../types/comment';
+import type { Post } from '../types/post';
 import { useComments } from '../hooks/useComments';
 import CommentSection from './CommentSection';
 
-export interface Post {
-  id: number;
-  author: string;
-  avatar: string;
-  time: string;
-  tag: string;
-  title: string;
-  content: string;
-  likes: number;
-  comments: number;
-  liked: boolean;
-}
+export type { Post } from '../types/post';
 
 interface PostCardProps {
   post: Post;
   index: number;
   initialComments?: Comment[];
+  currentUserId?: number;
+  isAdmin?: boolean;
   onToggleLike: (id: number) => void;
+  onEditPost?: (post: Post) => void;
+  onDeletePost?: (id: number) => void;
+  onReportPost?: (id: number) => void;
 }
 
 export default function PostCard({
   post,
   index,
   initialComments = [],
+  currentUserId,
+  isAdmin = false,
   onToggleLike,
+  onEditPost,
+  onDeletePost,
+  onReportPost,
 }: PostCardProps) {
   const [commentCount, setCommentCount] = useState(
     initialComments.length > 0 ? initialComments.length : post.comments
   );
+  const [hasReported, setHasReported] = useState(false);
+
+  const isOwner = Boolean(currentUserId && post.authorId && currentUserId === post.authorId);
+  const canManage = isOwner || isAdmin;
 
   const {
     comments,
@@ -48,6 +52,12 @@ export default function PostCard({
     onCommentCountChange: setCommentCount,
   });
 
+  const handleReport = () => {
+    if (hasReported) return;
+    setHasReported(true);
+    onReportPost?.(post.id);
+  };
+
   return (
     <article
       className="post-card"
@@ -62,7 +72,47 @@ export default function PostCard({
           <div className="post-author-name">{post.author}</div>
           <time className="post-time">{post.time}</time>
         </div>
-        <span className="post-tag">{post.tag}</span>
+        <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 8 }}>
+          {post.materia && <span className="post-tag post-materia-tag">{post.materia}</span>}
+          <span className="post-tag">{post.tag}</span>
+
+          {canManage && onEditPost && (
+            <button
+              type="button"
+              className="post-action-icon-btn"
+              onClick={() => onEditPost(post)}
+              title="Editar publicação"
+              aria-label="Editar publicação"
+            >
+              <Edit3 size={15} />
+            </button>
+          )}
+
+          {canManage && onDeletePost && (
+            <button
+              type="button"
+              className="post-action-icon-btn delete-btn"
+              onClick={() => onDeletePost(post.id)}
+              title="Excluir publicação"
+              aria-label="Excluir publicação"
+            >
+              <Trash2 size={15} />
+            </button>
+          )}
+
+          {!isOwner && onReportPost && (
+            <button
+              type="button"
+              className={`post-action-icon-btn ${hasReported ? 'reported' : ''}`}
+              onClick={handleReport}
+              disabled={hasReported}
+              title={hasReported ? 'Publicação denunciada' : 'Denunciar publicação'}
+              aria-label="Denunciar publicação"
+            >
+              <Flag size={15} />
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="post-card-body">

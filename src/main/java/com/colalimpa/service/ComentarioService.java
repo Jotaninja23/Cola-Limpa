@@ -8,6 +8,7 @@ import com.colalimpa.model.Post;
 import com.colalimpa.model.Usuario;
 import com.colalimpa.repository.ComentarioRepository;
 import java.util.List;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -68,9 +69,32 @@ public class ComentarioService {
         comentarioRepository.save(comentario);
     }
 
+    public void remover(Long id, Long usuarioId, boolean isAdmin) {
+        Comentario comentario = buscarEntidadePorId(id);
+        if (!isAdmin && (usuarioId == null || !comentario.getUsuario().getId().equals(usuarioId))) {
+            throw new AccessDeniedException("Você não possui permissão para remover este comentário.");
+        }
+        comentarioRepository.delete(comentario);
+    }
+
     public void remover(Long id) {
         Comentario comentario = buscarEntidadePorId(id);
         comentarioRepository.delete(comentario);
+    }
+
+    @Transactional(readOnly = true)
+    public List<ComentarioResponse> listarOcultadosPorDenuncia() {
+        return comentarioRepository.findByQtDenunciasGreaterThanEqualOrderByDataCriacaoDesc(LIMITE_DENUNCIAS_OCULTACAO)
+                .stream()
+                .map(ComentarioResponse::fromEntity)
+                .toList();
+    }
+
+    public ComentarioResponse aprovarComentario(Long id) {
+        Comentario comentario = buscarEntidadePorId(id);
+        comentario.zerarDenuncias();
+        Comentario salvo = comentarioRepository.save(comentario);
+        return ComentarioResponse.fromEntity(salvo);
     }
 }
 

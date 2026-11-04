@@ -1,4 +1,4 @@
-package com.colalimpa.security;
+﻿package com.colalimpa.security;
 
 import com.colalimpa.model.Usuario;
 import java.util.Collection;

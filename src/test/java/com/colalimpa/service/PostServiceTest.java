@@ -8,6 +8,7 @@ import static org.mockito.Mockito.when;
 
 import com.colalimpa.dto.PostRequest;
 import com.colalimpa.dto.PostResponse;
+import com.colalimpa.dto.PostUpdateRequest;
 import com.colalimpa.exception.ResourceNotFoundException;
 import com.colalimpa.model.Post;
 import com.colalimpa.model.Usuario;
@@ -20,6 +21,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.access.AccessDeniedException;
 
 @ExtendWith(MockitoExtension.class)
 class PostServiceTest {
@@ -136,5 +138,92 @@ class PostServiceTest {
         postService.remover(10L);
 
         verify(postRepository).delete(post);
+    }
+
+    @Test
+    void shouldUpdatePostSuccessfullyWhenUserIsAuthor() {
+        when(postRepository.findById(10L)).thenReturn(Optional.of(post));
+        when(postRepository.save(any(Post.class))).thenReturn(post);
+
+        PostUpdateRequest update = new PostUpdateRequest("Novo Título", "Novo Texto", "Resumo", "Física");
+        PostResponse response = postService.editar(10L, 1L, false, update);
+
+        assertThat(response).isNotNull();
+        assertThat(post.getTitulo()).isEqualTo("Novo Título");
+        assertThat(post.getTexto()).isEqualTo("Novo Texto");
+        assertThat(post.getCategoria()).isEqualTo("Resumo");
+        assertThat(post.getMateria()).isEqualTo("Física");
+    }
+
+    @Test
+    void shouldUpdatePostSuccessfullyWhenUserIsAdminEvenIfNotAuthor() {
+        when(postRepository.findById(10L)).thenReturn(Optional.of(post));
+        when(postRepository.save(any(Post.class))).thenReturn(post);
+
+        PostUpdateRequest update = new PostUpdateRequest("Modificado por Admin", "Texto", "Resumo", "Química");
+        PostResponse response = postService.editar(10L, 999L, true, update);
+
+        assertThat(response).isNotNull();
+        assertThat(post.getTitulo()).isEqualTo("Modificado por Admin");
+    }
+
+    @Test
+    void shouldThrowAccessDeniedWhenUpdatingPostByNonAuthorNonAdmin() {
+        when(postRepository.findById(10L)).thenReturn(Optional.of(post));
+        PostUpdateRequest update = new PostUpdateRequest("Hack", "Texto", "Resumo", "História");
+
+        assertThatThrownBy(() -> postService.editar(10L, 2L, false, update))
+                .isInstanceOf(AccessDeniedException.class)
+                .hasMessageContaining("Você não possui permissão para editar esta publicação.");
+    }
+
+    @Test
+    void shouldDeletePostSuccessfullyWhenUserIsAuthor() {
+        when(postRepository.findById(10L)).thenReturn(Optional.of(post));
+
+        postService.remover(10L, 1L, false);
+
+        verify(postRepository).delete(post);
+    }
+
+    @Test
+    void shouldDeletePostSuccessfullyWhenUserIsAdmin() {
+        when(postRepository.findById(10L)).thenReturn(Optional.of(post));
+
+        postService.remover(10L, 999L, true);
+
+        verify(postRepository).delete(post);
+    }
+
+    @Test
+    void shouldThrowAccessDeniedWhenDeletingPostByNonAuthorNonAdmin() {
+        when(postRepository.findById(10L)).thenReturn(Optional.of(post));
+
+        assertThatThrownBy(() -> postService.remover(10L, 2L, false))
+                .isInstanceOf(AccessDeniedException.class)
+                .hasMessageContaining("Você não possui permissão para remover esta publicação.");
+    }
+
+    @Test
+    void shouldListReportedPostsForModeration() {
+        when(postRepository.findByQtDenunciasGreaterThanEqualOrderByDataCriacaoDesc(5))
+                .thenReturn(List.of(post));
+
+        List<PostResponse> ocultados = postService.listarOcultadosPorDenuncia();
+
+        assertThat(ocultados).hasSize(1);
+    }
+
+    @Test
+    void shouldApprovePostAndResetReports() {
+        post.setQtDenuncias(5);
+        when(postRepository.findById(10L)).thenReturn(Optional.of(post));
+        when(postRepository.save(any(Post.class))).thenReturn(post);
+
+        PostResponse response = postService.aprovarPublicacao(10L);
+
+        assertThat(response).isNotNull();
+        assertThat(post.getQtDenuncias()).isEqualTo(0);
+        verify(postRepository).save(post);
     }
 }

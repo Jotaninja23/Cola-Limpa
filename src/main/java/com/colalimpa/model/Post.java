@@ -85,6 +85,25 @@ public class Post {
         this.qtDenuncias = (this.qtDenuncias == null ? 0 : this.qtDenuncias) + 1;
     }
 
+    public void zerarDenuncias() {
+        this.qtDenuncias = 0;
+    }
+
+    public void atualizar(String titulo, String texto, String categoria, String materia) {
+        if (titulo != null && !titulo.isBlank()) {
+            this.titulo = titulo;
+        }
+        if (texto != null && !texto.isBlank()) {
+            this.texto = texto;
+        }
+        if (categoria != null && !categoria.isBlank()) {
+            this.categoria = categoria;
+        }
+        if (materia != null && !materia.isBlank()) {
+            this.materia = materia;
+        }
+    }
+
     public Long getId() {
         return id;
     }

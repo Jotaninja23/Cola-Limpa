@@ -1,4 +1,4 @@
-package com.colalimpa.dto;
+﻿package com.colalimpa.dto;
 
 import com.colalimpa.model.Usuario;
 import java.time.LocalDateTime;
