@@ -1,4 +1,4 @@
-﻿import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import LoginForm from './LoginForm';
 
@@ -67,6 +67,16 @@ describe('LoginForm', () => {
     fireEvent.click(demoBtn);
 
     expect(handleDemo).toHaveBeenCalledTimes(1);
+  });
+
+  it('should trigger google login when clicked', () => {
+    const handleGoogle = vi.fn();
+    render(<LoginForm {...defaultProps} onLoginWithGoogle={handleGoogle} />);
+
+    const googleBtn = screen.getByRole('button', { name: /continuar com o google/i });
+    fireEvent.click(googleBtn);
+
+    expect(handleGoogle).toHaveBeenCalledTimes(1);
   });
 
   it('should display error message when present', () => {

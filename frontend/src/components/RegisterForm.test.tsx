@@ -1,4 +1,4 @@
-﻿import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import RegisterForm from './RegisterForm';
 
@@ -55,5 +55,15 @@ describe('RegisterForm', () => {
     fireEvent.click(loginLink);
 
     expect(handleNavigateToLogin).toHaveBeenCalledTimes(1);
+  });
+
+  it('should trigger google login from register when clicked', () => {
+    const handleGoogle = vi.fn();
+    render(<RegisterForm {...defaultProps} onLoginWithGoogle={handleGoogle} />);
+
+    const googleBtn = screen.getByRole('button', { name: /cadastrar com o google/i });
+    fireEvent.click(googleBtn);
+
+    expect(handleGoogle).toHaveBeenCalledTimes(1);
   });
 });

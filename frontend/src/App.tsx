@@ -49,12 +49,51 @@ export interface AppProps {
   initialPage?: Page;
 }
 
+function calculateStreak(sessions: { dataCriacao: string }[]): number {
+  if (!sessions || sessions.length === 0) return 0;
+  const dateSet = new Set<string>();
+  sessions.forEach(s => {
+    try {
+      const d = new Date(s.dataCriacao);
+      const isoDate = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      dateSet.add(isoDate);
+    } catch {
+      // ignora data inválida
+    }
+  });
+
+  const formatDay = (d: Date) =>
+    `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+
+  const today = new Date();
+  const todayStr = formatDay(today);
+  const yesterday = new Date(today);
+  yesterday.setDate(yesterday.getDate() - 1);
+  const yesterdayStr = formatDay(yesterday);
+
+  let currentCheck = new Date();
+  if (!dateSet.has(todayStr)) {
+    if (!dateSet.has(yesterdayStr)) {
+      return 0;
+    }
+    currentCheck = yesterday;
+  }
+
+  let count = 0;
+  while (dateSet.has(formatDay(currentCheck))) {
+    count++;
+    currentCheck.setDate(currentCheck.getDate() - 1);
+  }
+  return count;
+}
+
 export function AppContent({ initialPage = 'home' }: AppProps) {
   const [currentPage, setCurrentPage] = useState<Page>(initialPage);
   const [totalXP, setTotalXP] = useState(350);
   const [xpToast, setXpToast] = useState<number | null>(null);
   const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
   const [userWeeklyMinutes, setUserWeeklyMinutes] = useState<number[]>([45, 60, 30, 90, 75, 50, 0]);
+  const [userStreak, setUserStreak] = useState<number>(1);
 
   const auth = useAuth();
   const displayXP = auth.user?.xp !== undefined ? auth.user.xp : totalXP;
@@ -92,6 +131,7 @@ export function AppContent({ initialPage = 'home' }: AppProps) {
               }
             });
             setUserWeeklyMinutes(minutesByDay);
+            setUserStreak(Math.max(1, calculateStreak(sessions)));
           }
         })
         .catch(() => {});
@@ -296,7 +336,7 @@ export function AppContent({ initialPage = 'home' }: AppProps) {
               totalXP={displayXP}
               sessionsCompleted={pomodoro.sessionsCompleted}
               totalMinutesToday={pomodoro.totalMinutesToday}
-              streak={7}
+              streak={userStreak}
               metaDiariaMinutos={auth.user?.metaDiariaMinutos || 90}
               weeklyData={userWeeklyMinutes}
             />
@@ -320,6 +360,10 @@ export function AppContent({ initialPage = 'home' }: AppProps) {
                 auth.loginAsDemo();
                 handleLoginSuccess();
               }}
+              onLoginWithGoogle={async () => {
+                await auth.loginComGoogle('mock-google-id-token');
+                handleLoginSuccess();
+              }}
               onNavigateToRegister={() => setCurrentPage('register')}
               onNavigateHome={() => setCurrentPage('home')}
               onResetFlow={auth.resetAuthFlow}
@@ -334,6 +378,10 @@ export function AppContent({ initialPage = 'home' }: AppProps) {
                 const ok = await auth.register(data);
                 if (ok) handleRegisterSuccess();
                 return ok;
+              }}
+              onLoginWithGoogle={async () => {
+                await auth.loginComGoogle('mock-google-id-token');
+                handleRegisterSuccess();
               }}
               onNavigateToLogin={() => setCurrentPage('login')}
               onNavigateHome={() => setCurrentPage('home')}
