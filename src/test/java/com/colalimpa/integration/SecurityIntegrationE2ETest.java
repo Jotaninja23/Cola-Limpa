@@ -109,14 +109,24 @@ class SecurityIntegrationE2ETest {
         String jwtToken = jsonResponse.get("token").asText();
         assertThat(jwtService.isTokenValido(jwtToken)).isTrue();
 
-        // 3. Acessa endpoint protegido com o token JWT
-        PostRequest postRequest = new PostRequest(usuario.getId(), "Post E2E", "Texto do post E2E", "Dúvida", "Física");
+        // 3. Acessa endpoint protegido com o token JWT sem usuarioId no payload (comportamento real do frontend)
+        PostRequest postRequest = new PostRequest(null, "Post E2E", "Texto do post E2E", "Dúvida", "Física");
         mockMvc.perform(post("/api/posts")
                         .header("Authorization", "Bearer " + jwtToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(postRequest)))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.titulo").value("Post E2E"));
+                .andExpect(jsonPath("$.titulo").value("Post E2E"))
+                .andExpect(jsonPath("$.usuarioId").value(usuario.getId()));
+
+        // 3.1. Cria comentário sem usuarioId no payload
+        com.colalimpa.dto.ComentarioRequest comRequest = new com.colalimpa.dto.ComentarioRequest(1L, null, "Excelente post E2E");
+        mockMvc.perform(post("/api/comentarios")
+                        .header("Authorization", "Bearer " + jwtToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(comRequest)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.usuarioId").value(usuario.getId()));
 
         // 4. Replay attack: tentar validar o mesmo código novamente deve falhar
         mockMvc.perform(post("/api/auth/validar-codigo")

@@ -1,9 +1,7 @@
-﻿package com.colalimpa.dto;
-
-import jakarta.validation.constraints.NotNull;
+package com.colalimpa.dto;
 
 public record LikeRequest(
-        @NotNull Long usuarioId,
+        Long usuarioId,
         Long postId,
         Long comentarioId
 ) {

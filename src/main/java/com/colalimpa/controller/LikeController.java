@@ -1,4 +1,4 @@
-﻿package com.colalimpa.controller;
+package com.colalimpa.controller;
 
 import com.colalimpa.dto.LikeRequest;
 import com.colalimpa.dto.LikeResponse;
@@ -32,9 +32,11 @@ public class LikeController {
             @CurrentUser UsuarioPrincipal principal,
             @Valid @RequestBody LikeRequest request
     ) {
-        LikeRequest finalRequest = (principal != null && !principal.getId().equals(request.usuarioId()))
-                ? new LikeRequest(principal.getId(), request.postId(), request.comentarioId())
-                : request;
+        Long usuarioId = principal != null ? principal.getId() : request.usuarioId();
+        if (usuarioId == null) {
+            throw new BusinessRuleException("Identificador do usuário autor não informado.");
+        }
+        LikeRequest finalRequest = new LikeRequest(usuarioId, request.postId(), request.comentarioId());
         LikeResponse response = likeService.curtir(finalRequest);
         URI uri = URI.create("/api/likes/" + response.id());
         return ResponseEntity.created(uri).body(response);

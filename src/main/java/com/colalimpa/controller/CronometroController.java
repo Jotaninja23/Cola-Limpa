@@ -1,4 +1,4 @@
-﻿package com.colalimpa.controller;
+package com.colalimpa.controller;
 
 import com.colalimpa.dto.CronometroHistoricoRequest;
 import com.colalimpa.dto.CronometroHistoricoResponse;
@@ -32,9 +32,11 @@ public class CronometroController {
             @CurrentUser UsuarioPrincipal principal,
             @Valid @RequestBody CronometroHistoricoRequest request
     ) {
-        CronometroHistoricoRequest finalRequest = (principal != null && !principal.getId().equals(request.usuarioId()))
-                ? new CronometroHistoricoRequest(principal.getId(), request.tempoSegundos(), request.tipoSessao())
-                : request;
+        Long usuarioId = principal != null ? principal.getId() : request.usuarioId();
+        if (usuarioId == null) {
+            throw new BusinessRuleException("Identificador do usuário autor não informado.");
+        }
+        CronometroHistoricoRequest finalRequest = new CronometroHistoricoRequest(usuarioId, request.tempoSegundos(), request.tipoSessao());
         CronometroHistoricoResponse response = cronometroService.registrarSessao(finalRequest);
         URI uri = URI.create("/api/cronometro/" + response.id());
         return ResponseEntity.created(uri).body(response);
