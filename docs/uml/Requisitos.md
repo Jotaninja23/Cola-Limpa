@@ -90,7 +90,7 @@ Restrições:
 * não pode postar;
 * não pode utilizar cronômetro;
 * não pode curtir;
-* não pode responder questões.
+* não pode responder dúvidas acadêmicas na comunidade.
 
 ---
 
@@ -103,7 +103,7 @@ Permissões:
 * criar posts;
 * comentar;
 * utilizar cronômetro;
-* responder questões;
+* responder dúvidas acadêmicas e tópicos de vestibulares;
 * editar perfil;
 * curtir posts;
 * curtir comentários.
