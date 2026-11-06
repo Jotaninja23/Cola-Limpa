@@ -23,6 +23,7 @@ import LoginForm from './components/LoginForm';
 import RegisterForm from './components/RegisterForm';
 import ModerationPanel from './components/ModerationPanel';
 import EditProfileModal from './components/EditProfileModal';
+import { Logo } from './components/common/Logo';
 import { usePomodoro } from './hooks/usePomodoro';
 import { AuthProvider } from './context/AuthContext';
 import { useAuth } from './hooks/useAuth';
@@ -203,7 +204,7 @@ export function AppContent({ initialPage = 'home' }: AppProps) {
 
       <aside className="sidebar" aria-label="Navegação Principal">
         <div className="sidebar-logo">
-          <div className="sidebar-logo-icon" aria-hidden="true">CL</div>
+          <Logo size={42} className="sidebar-logo-icon" aria-hidden="true" />
           <div className="sidebar-logo-text">
             <span className="sidebar-brand-name">Cola Limpa</span>
             <span>Estudos Gamificados</span>

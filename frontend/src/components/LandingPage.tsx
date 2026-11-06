@@ -1,4 +1,4 @@
-﻿import {
+import {
   Timer,
   Users,
   LayoutDashboard,
@@ -13,6 +13,7 @@
   Clock,
   Compass,
 } from 'lucide-react';
+import { Logo } from './common/Logo';
 
 interface LandingPageProps {
   onNavigate: (page: 'pomodoro' | 'community' | 'dashboard' | 'login' | 'register') => void;
@@ -28,6 +29,10 @@ export default function LandingPage({
   return (
     <div className="landing-wrapper">
       <section className="landing-hero" aria-label="Apresentação do Cola Limpa">
+        <div className="landing-logo-hero" style={{ display: 'flex', justifyContent: 'center', marginBottom: '1rem' }}>
+          <Logo size={76} aria-label="Logotipo Cola Limpa" />
+        </div>
+
         <div className="landing-badge">
           <GraduationCap size={16} />
           <span>ETEC • Trabalho de Conclusão de Curso</span>

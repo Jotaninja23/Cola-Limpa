@@ -38,15 +38,16 @@
   width: 42px;
   height: 42px;
   border-radius: var(--radius-md);
-  background: linear-gradient(135deg, var(--color-secondary), var(--color-primary));
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--bg-primary);
-  font-weight: 800;
-  font-size: var(--font-size-lg);
   flex-shrink: 0;
   box-shadow: var(--shadow-md);
+  transition: transform var(--transition-base);
+}
+
+.sidebar-logo-icon:hover {
+  transform: scale(1.05);
 }
 
 .sidebar-logo-text h1,

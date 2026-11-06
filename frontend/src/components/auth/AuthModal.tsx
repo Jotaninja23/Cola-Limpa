@@ -1,7 +1,8 @@
-﻿import React, { useState, useEffect, useCallback } from 'react';
-import { X, Mail, ArrowLeft, Loader2, Sparkles, AlertCircle } from 'lucide-react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { X, Mail, ArrowLeft, Loader2, AlertCircle } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { PinInput } from './PinInput';
+import { Logo } from '../common/Logo';
 
 export const AuthModal: React.FC = () => {
   const {
@@ -128,8 +129,8 @@ export const AuthModal: React.FC = () => {
         {step === 'email' ? (
           <div className="auth-step-container">
             <div className="auth-modal-header">
-              <div className="auth-modal-icon">
-                <Sparkles size={28} />
+              <div className="auth-modal-icon" style={{ background: 'transparent' }}>
+                <Logo size={52} aria-hidden="true" />
               </div>
               <h2 id="auth-modal-title">Entre no Cola Limpa</h2>
               <p>Estude com foco, compartilhe na comunidade e ganhe XP!</p>

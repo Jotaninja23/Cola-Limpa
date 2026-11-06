@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react';
 import { Mail, KeyRound, ArrowRight, ShieldCheck, Sparkles, AlertCircle, ArrowLeft } from 'lucide-react';
+import { Logo } from './common/Logo';
 
 interface LoginFormProps {
   step: 'email' | 'otp';
@@ -46,6 +47,9 @@ export default function LoginForm({
   return (
     <div className="auth-container">
       <div className="auth-card">
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '0.75rem' }}>
+          <Logo size={56} aria-label="Logo Cola Limpa" />
+        </div>
         <header className="auth-header">
           <div className="auth-icon-badge">
             <ShieldCheck size={26} />

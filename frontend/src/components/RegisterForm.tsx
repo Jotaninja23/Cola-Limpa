@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react';
 import { User, Mail, Phone, Clock, GraduationCap, ArrowRight, AlertCircle } from 'lucide-react';
 import type { RegisterFormData } from '../types/auth';
+import { Logo } from './common/Logo';
 
 interface RegisterFormProps {
   isLoading: boolean;
@@ -55,6 +56,9 @@ export default function RegisterForm({
   return (
     <div className="auth-container">
       <div className="auth-card register-card">
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '0.75rem' }}>
+          <Logo size={56} aria-label="Logo Cola Limpa" />
+        </div>
         <header className="auth-header">
           <div className="auth-icon-badge">
             <GraduationCap size={26} />
